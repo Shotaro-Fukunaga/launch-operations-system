@@ -1,0 +1,13 @@
+<svg width="40" height="42" viewBox="0 0 40 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        .fill-color { fill: #D9D9D9; } /* ここで共通の色を定義 */
+    </style>
+    <rect x="12" y="19" width="16" height="23" class="fill-color"/>
+    <path d="M12.2417 12.4871C11.4542 11.1477 12.4279 9.46111 13.9816 9.47343L26.1747 9.57012C27.7072 9.58227 28.6572 11.2428 27.8909 12.5701L21.8781 22.9846C21.1118 24.3118 19.1988 24.3194 18.422 22.9983L12.2417 12.4871Z" class="fill-color"/>
+    <rect y="24" width="9" height="14" class="fill-color"/>
+    <rect x="31" y="24" width="9" height="14" class="fill-color"/>
+    <rect x="19" y="5" width="2" height="10" class="fill-color"/>
+    <circle cx="20" cy="4" r="2" class="fill-color"/>
+    <rect x="9" y="30" width="4" height="1" class="fill-color"/>
+    <rect x="27" y="30" width="4" height="1" class="fill-color"/>
+</svg>
