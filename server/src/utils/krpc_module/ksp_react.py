@@ -1,8 +1,9 @@
 import asyncio
-from websockets.server import serve
-import krpc
-
 import json
+
+import krpc
+from websockets.server import serve
+
 
 def get_important_orbit_data(vessel, reference_frame):
     """
@@ -11,7 +12,7 @@ def get_important_orbit_data(vessel, reference_frame):
     :param vessel: 現在アクティブな宇宙船のオブジェクト。
     :param reference_frame: 使用する参照フレーム。
     :return: 軌道データを含む辞書。
-    
+
     apoapsis_altitude: 遠地点の高度。軌道上で宇宙船が中心天体から最も遠い点の高度です。
     periapsis_altitude: 近地点の高度。軌道上で宇宙船が中心天体に最も近づく点の高度です。
     semi_major_axis: 軌道の長半径。軌道の主要な軸の長さで、軌道のサイズを示します。
@@ -54,6 +55,7 @@ def get_important_orbit_data(vessel, reference_frame):
         # "true_anomaly": orbit.true_anomaly_at_ut(orbit.ut),
     }
 
+
 def get_measured_vessel_data(vessel, reference_frame):
     """
     宇宙船の直接計測可能な各種データを取得する関数。
@@ -61,7 +63,7 @@ def get_measured_vessel_data(vessel, reference_frame):
     :param vessel: 現在アクティブな船舶のオブジェクト。
     :param reference_frame: 使用する参照フレーム。
     :return: 船舶の計測可能なデータを含む辞書。
-    
+
     g_force: 現在宇宙船に作用している重力加速度の倍数です。1Gは地球の表面での重力加速度に相当します。
     mean_altitude: 宇宙船の平均海面からの高度です。海面が基準となります。
     surface_altitude: 宇宙船が現在上空を飛んでいる地表または海面からの垂直距離です。
@@ -109,7 +111,8 @@ def get_measured_vessel_data(vessel, reference_frame):
         "speed_of_sound": vessel.flight().speed_of_sound,
         "true_air_speed": vessel.flight().true_air_speed,
     }
-    
+
+
 def get_calculated_vessel_data(vessel, reference_frame):
     """
     宇宙船の理論計算やシミュレーションに基づく各種データを取得する関数。
@@ -117,7 +120,7 @@ def get_calculated_vessel_data(vessel, reference_frame):
     :param vessel: 現在アクティブな船舶のオブジェクト。
     :param reference_frame: 使用する参照フレーム。
     :return: 船舶の計算に基づくデータを含む辞書。
-    
+
     terrain_altitude: 宇宙船の下の地形（岩盤や地表）からの高さです。地形の起伏に依存します。
     elevation: 宇宙船が地表または海面からどの程度の高さにあるかを示します。地形に対する高さと似ていますが、こちらはより一般的な用語です。
     center_of_mass: 宇宙船の質量中心の位置です。宇宙船の重心がどこにあるかを示します。
@@ -154,11 +157,11 @@ def get_calculated_vessel_data(vessel, reference_frame):
         "aerodynamic_force": vessel.flight(reference_frame).aerodynamic_force,
         "static_pressure_at_msl": vessel.flight().static_pressure_at_msl,  # 平均海面での静的大気圧
         # "stall_fraction": vessel.flight().stall_fraction,  # ストール割合
-        }
-    
+    }
+
 
 async def ksp_data(websocket, path):
-    conn = krpc.connect(name='sample')
+    conn = krpc.connect(name="sample")
     vessel = conn.space_center.active_vessel
 
     # 参照フレーム。デフォルトは船舶の表面参照フレームです
@@ -168,19 +171,21 @@ async def ksp_data(websocket, path):
         vessel_data = get_measured_vessel_data(vessel, reference_frame)
         # 重要な軌道データを取得
         orbit_data = get_important_orbit_data(vessel, reference_frame)
-        
+
         # 二つの辞書を統合
         vessel_data.update(orbit_data)
-        
+
         # 統合したデータをJSON形式でフロントエンドに送信
         await websocket.send(json.dumps(vessel_data))
 
         # 1秒ごとに更新
         await asyncio.sleep(0.5)
 
+
 async def main():
     async with serve(ksp_data, "localhost", 8765):
         await asyncio.Future()  # このFutureは永遠に完了しない
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     asyncio.run(main())
