@@ -16,7 +16,7 @@ export const EventMarkerGenerator: FC<Props> = ({
 }) => {
   const totalMinutesInDay = 24 * 60 // 1日の総分
 
-  const markers = events?.map((event) => {
+  const markers = events?.map((event,index) => {
     const [hours, minutes] = event.time.split(':').map(Number) // "13:00" => [13, 0]
     const eventMinutes = hours * 60 + minutes // イベントの時間を分単位で計算
     const bottomPosition =
@@ -25,7 +25,7 @@ export const EventMarkerGenerator: FC<Props> = ({
     const borderColor = event.color ? event.color :"white"
     return (
       <div
-        key={event.name}
+        key={index}
         className="h-[2px] w-[14rem] absolute text-white"
         style={{
           backgroundColor: borderColor,
