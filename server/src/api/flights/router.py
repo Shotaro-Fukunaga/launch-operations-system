@@ -1,6 +1,7 @@
 import json
 import logging
 
+
 import krpc
 from fastapi import APIRouter, Depends, WebSocket
 from sqlalchemy.orm import Session
@@ -62,6 +63,13 @@ async def websocket_endpoint(websocket: WebSocket):
         vessel_data.update(orbit_data)
 
         await websocket.send_text(json.dumps(vessel_data))
+
+    
+@router.get("/get_telemetory")
+def get_telemetory():
+    return {"telemetory": "test"}
+
+
 
 
 # ロケットのスケジュールを登録するエンドポイント
