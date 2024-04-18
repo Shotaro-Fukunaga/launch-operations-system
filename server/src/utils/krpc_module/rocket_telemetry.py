@@ -1,18 +1,16 @@
 from .base_rocket import BaseRocket
 from .rocket_stage import RocketStage
 
-KRPC_CONNECT_SERVER_NAME = "Find Parts By Tag"
-
 
 class RocketTelemetry(BaseRocket):
-    def __init__(self) -> None:
+    def __init__(self,krpc_connect_server_name:str) -> None:
         """initializer"""
-        super().__init__(KRPC_CONNECT_SERVER_NAME)
+        super().__init__(krpc_connect_server_name)
         self.initialize_stages()
 
     def initialize_stages(self) -> None:
         """宇宙船のステージを初期化する"""
-        self.satellite_bus = RocketStage(self.find_parts_by_tag("payload"))
+        self.satellite_bus = RocketStage(self.find_parts_by_tag("satellite_bus"))
         self.first_stage = RocketStage(self.find_parts_by_tag("first_stage"))
         self.second_stage = RocketStage(self.find_parts_by_tag("second_stage"))
         self.launch_clamps = RocketStage(self.find_parts_by_tag("launch_clamp"))
@@ -131,8 +129,9 @@ class RocketTelemetry(BaseRocket):
         """
         orbit = self.vessel.orbit
         flight_info = self.vessel.flight(self.reference_frame)
+
         return {
-            "orbital_speed": orbit.orbital_speed_at(),
+            "orbital_speed": orbit.speed,
             "apoapsis_altitude": orbit.apoapsis_altitude,
             "periapsis_altitude": orbit.periapsis_altitude,
             "period": orbit.period,
@@ -267,7 +266,7 @@ class RocketTelemetry(BaseRocket):
         """ロケット各ステージの熱関連データを返す
 
         Returns:
-        - payload (dict): ペイロードセクションの熱データ
+        - satellite_bus (dict): 人工衛星の熱データ
         - first_stage (dict): 第一段ロケットの熱データ
         - second_stage (dict): 第二段ロケットの熱データ
             dict:
@@ -281,7 +280,7 @@ class RocketTelemetry(BaseRocket):
             - thermal_percentage (float): パーツの温度が最大許容温度に対してどの程度の割合であるかをパーセントで表示
         """
         return {
-            "payload": self.satellite_bus.get_thermal_data(),
+            "satellite_bus": self.satellite_bus.get_thermal_data(),
             "first_stage": self.first_stage.get_thermal_data(),
             "second_stage": self.second_stage.get_thermal_data(),
         }
