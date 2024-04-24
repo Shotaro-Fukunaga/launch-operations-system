@@ -177,7 +177,7 @@ class RocketTelemetry(BaseRocket):
             "latitude": flight_info.latitude,
             "longitude": flight_info.longitude,
             "biome": self.vessel.biome,
-            "situation": self.vessel.situation,
+            "situation": str(self.vessel.situation),
         }
 
     def get_delta_v_status(self):
@@ -243,6 +243,8 @@ class RocketTelemetry(BaseRocket):
                     "atom_delta_v": atom_delta_v,
                     "vac_delta_v": vac_delta_v,
                     "time": burn_time,
+                    "temperature": engine["temperature"],
+                    "skin_temperature": engine["skin_temperature"],
                 }
             )
 

@@ -1,14 +1,14 @@
 import React from 'react'
 import LinearProgress from '@mui/material/LinearProgress'
 
-type RocketFuelStatusProps = {
+type Props = {
   liquidFuelAmount: number
   liquidFuelCapacity: number
   oxidizerAmount: number
   oxidizerCapacity: number
 }
 
-export const RocketFuelStatus: React.FC<RocketFuelStatusProps> = ({
+export const FuelTankStatus: React.FC<Props> = ({
   liquidFuelAmount,
   liquidFuelCapacity,
   oxidizerAmount,
@@ -19,6 +19,7 @@ export const RocketFuelStatus: React.FC<RocketFuelStatusProps> = ({
 
   return (
     <div className="w-full h-full">
+      
       <h2 className="font-medium">LiquidFuel</h2>
       <LinearProgress variant="determinate" value={liquidFuelPercentage} />
       <p className="text-[0.6rem]">

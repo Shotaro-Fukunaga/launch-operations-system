@@ -1,69 +1,163 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useState, useEffect, ReactNode } from "react";
+
+type TelemetryType = { [key: string]: string | number | string | number[] };
 
 export type WebSocketContextType = {
-  sendMessage: (message: string) => void
-  message: string
-}
+  sendMessage: (endpoint: string, message: string) => void;
+  messages: {
+    atmosphereInfo: TelemetryType;
+    orbitInfo: TelemetryType;
+    surfaceInfo: TelemetryType;
+    deltaVStatus: TelemetryType;
+    thermalStatus: TelemetryType;
+    satelliteBusStatus: TelemetryType;
+    communicationStatus: TelemetryType;
+  };
+};
 type WebSocketProviderProps = {
-  children: ReactNode
-}
+  children: ReactNode;
+};
 
-export const WebSocketContext = createContext<WebSocketContextType | null>(null)
-
-// export const useWebSocket = (): WebSocketContextType => {
-//   const context = useContext(WebSocketContext)
-//   if (context === null) {
-//     throw new Error('useWebSocket must be used within a WebSocketProvider')
-//   }
-//   return context
-// }
-
-
+export const WebSocketContext = createContext<WebSocketContextType | null>(
+  null
+);
 
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   children,
 }) => {
-  const [ws, setWs] = useState<WebSocket | null>(null)
-  const [message, setMessage] = useState<string>('')
+  const [atmosphereInfoMessage, setAtmosphereInfoMessage] =
+    useState<TelemetryType>({});
+  const [orbitInfoMessage, setOrbitInfoMessage] = useState<TelemetryType>({});
+  const [deltaVStatusMessage, setDeltaVStatusMessage] = useState<TelemetryType>(
+    {}
+  );
+  const [surfaceInfoMessage, setSurfaceInfoMessage] = useState<TelemetryType>(
+    {}
+  );
+  const [thermalStatusMessage, setThermalStatusMessage] =
+    useState<TelemetryType>({});
+  const [satelliteBusStatusMessage, setSatelliteBusStatusMessage] =
+    useState<TelemetryType>({});
+  const [communicationStatusMessage, setCommunicationStatusMessage] =
+    useState<TelemetryType>({});
+
+  const [orbitInfoWS, setOrbitInfoWS] = useState<WebSocket | null>(null);
+  const [surfaceInfoWS, setSurfaceInfoWS] = useState<WebSocket | null>(null);
+  const [deltaVStatusWS, setDeltaVStatusWS] = useState<WebSocket | null>(null);
+  const [thermalStatusWS, setThermalStatusWS] = useState<WebSocket | null>(
+    null
+  );
+  const [atmosphereInfoWS, setAtmosphereInfoWS] = useState<WebSocket | null>(
+    null
+  );
+  const [satelliteBusStatusWS, setSatelliteBusStatusWS] =
+    useState<WebSocket | null>(null);
+  const [communicationStatusWS, setCommunicationStatusWS] =
+    useState<WebSocket | null>(null);
 
   useEffect(() => {
-    if (!ws) {
-      const websocket = new WebSocket('ws://localhost:8000/ws')
+    const endpoints = [
+      {
+        url: "ws://localhost:8000/ws/atmosphere_info",
+        setWs: setAtmosphereInfoWS,
+        setMessage: setAtmosphereInfoMessage,
+      },
+      {
+        url: "ws://localhost:8000/ws/orbit_info",
+        setWs: setOrbitInfoWS,
+        setMessage: setOrbitInfoMessage,
+      },
+      {
+        url: "ws://localhost:8000/ws/surface_info",
+        setWs: setSurfaceInfoWS,
+        setMessage: setSurfaceInfoMessage,
+      },
+      {
+        url: "ws://localhost:8000/ws/delta_v_status",
+        setWs: setDeltaVStatusWS,
+        setMessage: setDeltaVStatusMessage,
+      },
+      {
+        url: "ws://localhost:8000/ws/thermal_status",
+        setWs: setThermalStatusWS,
+        setMessage: setThermalStatusMessage,
+      },
+      {
+        url: "ws://localhost:8000/ws/satellite_bus_status",
+        setWs: setSatelliteBusStatusWS,
+        setMessage: setSatelliteBusStatusMessage,
+      },
+      {
+        url: "ws://localhost:8000/ws/communication_status",
+        setWs: setCommunicationStatusWS,
+        setMessage: setCommunicationStatusMessage,
+      },
+    ];
 
+    endpoints.forEach(({ url, setWs, setMessage }) => {
+      const websocket = new WebSocket(url);
       websocket.onopen = () => {
-        console.log('WebSocket Connected')
-        setWs(websocket) // 接続が開かれたら、wsステートを更新
-      }
-
+        console.log(`Connected to ${url}`);
+        setWs(websocket);
+      };
       websocket.onmessage = (evt) => {
-        const message = JSON.parse(evt.data)
-        setMessage(message)
-      }
-
+        try {
+          const data = JSON.parse(evt.data);
+          // console.log(`Data received from ${url}:`, data);
+          setMessage(data);
+        } catch (error) {
+          console.error("Error parsing JSON!", error);
+        }
+      };
       websocket.onclose = () => {
-        console.log('WebSocket Disconnected')
-        setWs(null) // 接続が閉じられたら、wsステートをnullにリセット
-      }
-    }
+        console.log(`Disconnected from ${url}`);
+        setWs(null);
+      };
+    });
 
-    // コンポーネントのアンマウント時にWebSocketを閉じない
-    // return () => { websocket.close(); };
-  }, [ws])
+    return () => {
+      endpoints.forEach(({ setWs }) => {
+        setWs((ws) => {
+          if (ws) ws.close();
+          return null;
+        });
+      });
+    };
+  }, []);
 
-  const sendMessage = (message: string) => {
-    if (ws) {
-      ws.send(message)
+  const sendMessage = (endpoint: string, message: string) => {
+    const websockets: { [key: string]: WebSocket | null } = {
+      atmosphereInfo: atmosphereInfoWS,
+      orbitInfo: orbitInfoWS,
+      surfaceInfo: surfaceInfoWS,
+      deltaVStatus: deltaVStatusWS,
+      thermalStatus: thermalStatusWS,
+      satelliteBusStatus: satelliteBusStatusWS,
+      communicationStatus: communicationStatusWS,
+    };
+
+    const websocket = websockets[endpoint];
+    if (websocket) {
+      websocket.send(message);
     }
-  }
+  };
 
   const value = {
     sendMessage,
-    message,
-  }
+    messages: {
+      atmosphereInfo: atmosphereInfoMessage,
+      orbitInfo: orbitInfoMessage,
+      surfaceInfo: surfaceInfoMessage,
+      deltaVStatus: deltaVStatusMessage,
+      thermalStatus: thermalStatusMessage,
+      satelliteBusStatus: satelliteBusStatusMessage,
+      communicationStatus: communicationStatusMessage,
+    },
+  };
 
   return (
     <WebSocketContext.Provider value={value}>
       {children}
     </WebSocketContext.Provider>
-  )
-}
+  );
+};
