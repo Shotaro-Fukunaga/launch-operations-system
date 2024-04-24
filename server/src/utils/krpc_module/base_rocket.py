@@ -150,16 +150,3 @@ class BaseRocket:
         # 燃焼時間の見積もり
         burn_time_estimation = fuel_mass / fuel_consumption_rate
         return burn_time_estimation
-
-    def show_parts(self):
-        parts_by_tag = {}
-        for part in self.vessel.parts.all:
-            tag = part.tag
-            if tag not in parts_by_tag:
-                parts_by_tag[tag] = []
-            parts_by_tag[tag].append({"name": part.name, "title": part.title})
-
-        for tag, parts in parts_by_tag.items():
-            print(f"Tag: {tag}")
-            for part in parts:
-                print(f"  Name: {part['name']}, Title: {part['title']}")

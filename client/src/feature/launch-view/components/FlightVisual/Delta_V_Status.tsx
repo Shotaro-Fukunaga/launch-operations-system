@@ -1,12 +1,14 @@
 type Props = {
-  deltaV: number
-  specificImpulse: number
-  thrust: number
-  twr: number // Thrust-to-Weight Ratio
-  weight: number
-  dryWeight: number
-  burnTime: number
-}
+  deltaV: number;
+  specificImpulse: number;
+  thrust: number;
+  twr: number;
+  weight: number;
+  dryWeight: number;
+  burnTime: number;
+  temperature: number;
+  skinTemperature: number;
+};
 
 export const RocketEngineStatus: React.FC<Props> = ({
   deltaV,
@@ -26,6 +28,8 @@ export const RocketEngineStatus: React.FC<Props> = ({
       <li>重量: {weight} kg</li>
       <li>乾燥重量: {dryWeight} kg</li>
       <li>噴射時間: {burnTime} s</li>
+      <li>温度: {burnTime}</li>
+      <li>表面温度: {burnTime}</li>
     </ul>
-  )
-}
+  );
+};
