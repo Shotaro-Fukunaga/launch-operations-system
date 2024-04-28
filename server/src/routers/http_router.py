@@ -5,6 +5,7 @@ from fastapi import APIRouter
 # from src.settings.database import get_db
 from src.utils.krpc_module.rocket_telemetry import RocketTelemetry
 
+from src.settings.config import ROCKET_SCHEMAS
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
@@ -12,7 +13,7 @@ router = APIRouter(
     tags=["Flight"],
 )
 
-rocket = RocketTelemetry("http_server")
+rocket = RocketTelemetry("http_server",ROCKET_SCHEMAS)
 
 
 
@@ -32,14 +33,18 @@ def get_surface_info():
 def get_delta_v_status():
     return rocket.get_delta_v_status()
 
+@router.get("/get_fuel_status")
+def get_fuel_status():
+    return rocket.get_fuel_status()
+
 @router.get("/get_thermal_status")
 def get_thermal_status():
     return rocket.get_thermal_status()
 
 
-@router.get("/get_satellite_bus_status")
-def get_satellite_bus_status():
-    return rocket.get_satellite_bus_status()
+@router.get("/get_payload_status")
+def get_payload_status():
+    return rocket.get_payload_status()
 
 
 @router.get("/get_communication_status")

@@ -4,13 +4,14 @@ from fastapi import APIRouter, Depends, WebSocket, WebSocket, WebSocketDisconnec
 
 from src.settings.database import get_db
 from src.utils.krpc_module.rocket_telemetry import RocketTelemetry
+from src.settings.config import ROCKET_SCHEMAS
 from src.utils.websocket_handler import common_websocket_handler
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ws")
 
-rocket = RocketTelemetry("web_socket_server")
+rocket = RocketTelemetry("web_socket_server",ROCKET_SCHEMAS)
 
 
 @router.websocket("/atmosphere_info")

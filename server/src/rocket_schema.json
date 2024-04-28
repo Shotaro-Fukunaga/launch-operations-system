@@ -1,0 +1,130 @@
+{
+    "rocket_schemas": [
+        {
+            "unit_name": "anttena",
+            "group_name": "payload_stage",
+            "tag": "7e7zf3e",
+            "part_type": "anttena",
+            "event_type": "",
+            "event_details": "",
+            "status": 0
+        },
+        {
+            "unit_name": "solar_panel_1",
+            "group_name": "payload_stage",
+            "tag": "q45ujgwe",
+            "part_type": "solar_panel",
+            "event_type": "Solar Panels Deployed",
+            "event_details": "All solar panels have been deployed.",
+            "status": 0
+        },
+        {
+            "unit_name": "solar_panel_2",
+            "group_name": "payload_stage",
+            "tag": "2c5rxxb",
+            "part_type": "solar_panel",
+            "event_type": "Solar Panels Deployed",
+            "event_details": "All solar panels have been deployed.",
+            "status": 0
+        },
+        {
+            "unit_name": "satellite_bus",
+            "group_name": "payload_stage",
+            "tag": "gcxgvav",
+            "part_type": "satellite_bus",
+            "event_type": "",
+            "event_details": "",
+            "status": 0
+        },
+        {
+            "unit_name": "reaction_wheel",
+            "group_name": "payload_stage",
+            "tag": "5y9fbum",
+            "part_type": "reaction_wheel",
+            "event_type": "",
+            "event_details": "",
+            "status": 0
+        },
+        {
+            "unit_name": "payload_adapter",
+            "group_name": "second_stage",
+            "tag": "qyfrxu9",
+            "part_type": "decoupler",
+            "event_type": "satellite bus deployed",
+            "event_details": "satellite bus deployed",
+            "status": 0
+        },
+        {
+            "unit_name": "fairing_1",
+            "group_name": "second_stage",
+            "tag": "i47etyj",
+            "part_type": "fairing",
+            "event_type": "Fairing Jettisoned",
+            "event_details": "All fairings have been jettisoned.",
+            "status": 0
+        },
+        {
+            "unit_name": "fairing_2",
+            "group_name": "second_stage",
+            "tag": "8z7zngn",
+            "part_type": "fairing",
+            "event_type": "Fairing Jettisoned",
+            "event_details": "All fairings have been jettisoned.",
+            "status": 0
+        },
+        {
+            "unit_name": "second_tank",
+            "group_name": "second_stage",
+            "tag": "6vcmfam",
+            "part_type": "tank",
+            "event_type": "Second Tank Cut Off",
+            "event_details": "Second stage tank has been cut off or is missing.",
+            "status": 0
+        },
+        {
+            "unit_name": "second_engine",
+            "group_name": "second_stage",
+            "tag": "ewvn7gz",
+            "part_type": "engine",
+            "event_type": "SECO",
+            "event_details": "Second Engine Cut Off.",
+            "status": 0
+        },
+        {
+            "unit_name": "decoupler",
+            "group_name": "first_stage",
+            "tag": "n2wmbyh",
+            "part_type": "Decoupler",
+            "event_type": "decoupler jettisoned",
+            "event_details": "decoupler jettisoned",
+            "status": 0
+        },
+        {
+            "unit_name": "main_tank",
+            "group_name": "first_stage",
+            "tag": "483qara",
+            "part_type": "tank",
+            "event_type": "Main Tank Cut Off",
+            "event_details": "Main stage tank has been cut off or is missing.",
+            "status": 0
+        },
+        {
+            "unit_name": "main_engine",
+            "group_name": "first_stage",
+            "tag": "g69ingf",
+            "part_type": "engine",
+            "event_type": "MECO",
+            "event_details": "Main Engine Cut Off.",
+            "status": 0
+        },
+        {
+            "unit_name": "launch_clamp",
+            "group_name": "launch_stage",
+            "tag": "s938rr8",
+            "part_type": "launch_clamps",
+            "event_type": "Lift OFF",
+            "event_details": "Rocket Lift Off",
+            "status": 0
+        }
+    ]
+}
