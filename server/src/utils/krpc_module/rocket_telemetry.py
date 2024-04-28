@@ -1,19 +1,10 @@
 from .base_rocket import BaseRocket
-from .rocket_stage import RocketStage
 
 
 class RocketTelemetry(BaseRocket):
-    def __init__(self,krpc_connect_server_name:str) -> None:
+    def __init__(self, krpc_connect_server_name: str, rocket_part_list: list[dict]) -> None:
         """initializer"""
-        super().__init__(krpc_connect_server_name)
-        self.initialize_stages()
-
-    def initialize_stages(self) -> None:
-        """宇宙船のステージを初期化する"""
-        self.satellite_bus = RocketStage(self.find_parts_by_tag("satellite_bus"))
-        self.first_stage = RocketStage(self.find_parts_by_tag("first_stage"))
-        self.second_stage = RocketStage(self.find_parts_by_tag("second_stage"))
-        self.launch_clamps = RocketStage(self.find_parts_by_tag("launch_clamp"))
+        super().__init__(krpc_connect_server_name, rocket_part_list)
 
     def get_all_engines_status(self):
         """宇宙船のすべてのエンジンの基本ステータス情報を取得する
@@ -81,6 +72,90 @@ class RocketTelemetry(BaseRocket):
             }
             engines_status.append(status)
         return engines_status
+
+    def get_antenna_status(self, unit_name: str):
+        """
+        指定されたアンテナユニットの状態情報を取得する
+
+        Args:
+            unit_name (str): アンテナユニットの名前
+
+        Returns:
+            dict: アンテナの状態に関する情報を含む辞書
+                - state (str): アンテナの現在の状態
+                - power (float): アンテナが消費する電力
+                - packet_interval (float): データパケット送信の間隔
+                - packet_size (float): 送信するデータパケットのサイズ
+                - packet_resource_cost (float): データパケット送信のリソースコスト
+        """
+        unit = self.get_unit_by_name(unit_name)
+        return {
+            "state": unit.part.antenna.state,
+            "power": unit.part.antenna.power,
+            "packet_interval": unit.part.antenna.packet_interval,
+            "packet_size": unit.part.antenna.packet_size,
+            "packet_resource_cost": unit.part.antenna.packet_resource_cost,
+        }
+
+    def get_solar_panel_status(self, unit_name: str):
+        """
+        指定されたソーラーパネルユニットの状態情報を取得する
+
+        Args:
+            unit_name (str): ソーラーパネルユニットの名前
+
+        Returns:
+            dict: ソーラーパネルの状態に関する情報を含む辞書
+                - state (str): ソーラーパネルの現在の状態
+                - energy_flow (float): ソーラーパネルからのエネルギー流出量
+                - sun_exposure (float): ソーラーパネルの太陽への露出度
+        """
+        unit = self.get_unit_by_name(unit_name)
+        return {
+            "state": unit.part.solar_panel.state,
+            "energy_flow": unit.part.solar_panel.energy_flow,
+            "sun_exposure": unit.part.solar_panel.sun_exposure,
+        }
+
+    def get_reaction_wheel_status(self, unit_name: str):
+        """
+        指定されたリアクションホイールユニットの状態情報を取得する
+
+        Args:
+            unit_name (str): リアクションホイールユニットの名前
+
+        Returns:
+            dict: リアクションホイールの状態に関する情報を含む辞書
+                - active (bool): リアクションホイールが現在アクティブかどうか
+                - available_torque (tuple): 利用可能なトルクの量（ピッチ、ヨー、ロール）
+                - max_torque (tuple): 最大トルクの量（ピッチ、ヨー、ロール）
+        """
+        unit = self.get_unit_by_name(unit_name)
+        return {
+            "active": unit.part.reaction_wheel.active,
+            "available_torque": unit.part.reaction_wheel.available_torque,
+            "max_torque": unit.part.reaction_wheel.max_torque,
+        }
+
+    def get_satellite_bus_status(self, unit_name: str):
+        """
+        指定されたサテライトバスユニットの状態情報を取得する
+
+        Args:
+            unit_name (str): サテライトバスユニットの名前
+
+        Returns:
+            dict: サテライトバスの状態に関する情報を含む辞書
+                - shielded (bool): ユニットがシールドされているかどうか
+                - current_charge (float): 現在の電荷量
+                - max_charge (float): 最大電荷容量
+        """
+        unit = self.get_unit_by_name(unit_name)
+        return {
+            "shielded": unit.part.shielded,
+            "current_charge": unit.part.resources.amount("ElectricCharge"),
+            "max_charge": unit.part.resources.max("ElectricCharge"),
+        }
 
     def get_atmosphere_info(self):
         """宇宙船の現在位置での大気情報を取得する
@@ -203,13 +278,14 @@ class RocketTelemetry(BaseRocket):
             - vac_delta_v (float): 真空中でのデルタV
             - time (float): 燃焼時間
         """
-        payload_mass = self.satellite_bus.mass
-        first_stage_mass = self.first_stage.mass
-        second_stage_mass = self.second_stage.mass
+
+        payload_mass = self.total_mass_by_group("payload_stage")
+        first_stage_mass = self.total_mass_by_group("first_stage")
+        second_stage_mass = self.total_mass_by_group("second_stage")
 
         stages_start_mass = [
-            payload_mass + first_stage_mass,  # 第1ステージのスタート質量
-            payload_mass + first_stage_mass + second_stage_mass,  # 第2ステージのスタート質量
+            payload_mass + second_stage_mass,  # セカンドステージのスタート質量
+            payload_mass + first_stage_mass + second_stage_mass,  # メインステージのスタート質量
         ]
 
         engines = self.get_all_engines_status()
@@ -243,8 +319,6 @@ class RocketTelemetry(BaseRocket):
                     "atom_delta_v": atom_delta_v,
                     "vac_delta_v": vac_delta_v,
                     "time": burn_time,
-                    "temperature": engine["temperature"],
-                    "skin_temperature": engine["skin_temperature"],
                 }
             )
 
@@ -264,14 +338,20 @@ class RocketTelemetry(BaseRocket):
             "delta_v_list": delta_v_list,
         }
 
+    def get_fuel_status(self):
+        main_tank = self.get_unit_by_name("main_tank")
+        second_tank = self.get_unit_by_name("second_tank")
+
+        return {
+            "main_tank": main_tank.get_fuel_status(),
+            "second_tank": second_tank.get_fuel_status(),
+        }
+
     def get_thermal_status(self):
         """ロケット各ステージの熱関連データを返す
 
         Returns:
-        - satellite_bus (dict): 人工衛星の熱データ
-        - first_stage (dict): 第一段ロケットの熱データ
-        - second_stage (dict): 第二段ロケットの熱データ
-            dict:
+            dict: 各ユニットの熱関連に関する情報を含む辞書
             - tag (str): パーツに割り当てられたタグ
             - name (str): パーツの名前
             - title (str): パーツのタイトル
@@ -281,47 +361,43 @@ class RocketTelemetry(BaseRocket):
             - max_skin_temperature (float): パーツの表皮の最大許容温度
             - thermal_percentage (float): パーツの温度が最大許容温度に対してどの程度の割合であるかをパーセントで表示
         """
+        satellite_bus_unit = self.get_unit_by_name("satellite_bus")
+        fairing_unit = self.get_unit_by_name("fairing")
+        second_tank_unit = self.get_unit_by_name("second_tank")
+        second_engine_unit = self.get_unit_by_name("second_engine")
+        main_tank_unit = self.get_unit_by_name("main_tank")
+        main_engine_unit = self.get_unit_by_name("main_engine")
+
         return {
-            "satellite_bus": self.satellite_bus.get_thermal_data(),
-            "first_stage": self.first_stage.get_thermal_data(),
-            "second_stage": self.second_stage.get_thermal_data(),
+            "satellite_bus": satellite_bus_unit.get_temperature(),
+            "fairing": fairing_unit.get_temperature(),
+            "second_tank": second_tank_unit.get_temperature(),
+            "second_engine": second_engine_unit.get_temperature(),
+            "main_tank": main_tank_unit.get_temperature(),
+            "main_engine": main_engine_unit.get_temperature(),
         }
 
-    def get_satellite_bus_status(self):
-        """サテライトバスに属する各構成パーツのステータスを返す
+    def get_payload_status(self):
+        """
+        ペイロードステージに関連する部品の重量と状態情報を取得する
 
         Returns:
-            dict:
-            - name (str): パーツの名前
-            - title (str): パーツのタイトル
-            - shielded (bool): パーツがシールドされているかどうか
-            - temperature (float): パーツの現在の温度
-            - max_temperature (float): パーツの最大許容温度
-            - skin_temperature (float): パーツの表皮温度
-            - max_skin_temperature (float): パーツの表皮の最大許容温度
-            - thermal_percentage (float): パーツの現在の温度が最大許容温度の何パーセントか
-            - current_charge (float): パーツに蓄積されている電力の現在量（「ElectricCharge」が存在する場合）
-            - max_charge (float): パーツに蓄積可能な電力の最大量（「ElectricCharge」が存在する場合）
-
-        パーツが存在しない場合はエラーメッセージを含む辞書を返す。
+            dict: ペイロードステージの総質量と各ペイロード部品の詳細情報を含む
+                - payload_mass (float): ペイロードステージの総質量
+                - anttena (dict): アンテナの現在の状態に関する詳細情報
+                - satellite_bus (dict): サテライトバスの状態に関する詳細情報
+                - solar_panel_1 (dict): 最初のソーラーパネルの状態に関する詳細情報
+                - solar_panel_2 (dict): 二番目のソーラーパネルの状態に関する詳細情報
+                - reaction_wheel (dict): リアクションホイールの状態に関する詳細情報
         """
-        parts_info = []
-        for part in self.satellite_bus.parts:
-            part_info = {
-                "name": part.name,
-                "title": part.title,
-                "shielded": part.shielded,
-                "temperature": part.temperature,
-                "max_temperature": part.max_temperature,
-                "skin_temperature": part.skin_temperature,
-                "max_skin_temperature": part.max_skin_temperature,
-                "thermal_percentage": part.temperature / part.max_temperature * 100 if part.max_temperature else 0,
-                "current_charge": part.resources.amount("ElectricCharge") if "ElectricCharge" in part.resources.names else 0,
-                "max_charge": part.resources.max("ElectricCharge") if "ElectricCharge" in part.resources.names else 0,
-            }
-            parts_info.append(part_info)
-
-        return parts_info if parts_info else {"error": "Parts not found"}
+        return {
+            "payload_mass": self.total_mass_by_group("payload_stage"),
+            "anttena": self.get_antenna_status("anttena"),
+            "satellite_bus": self.get_satellite_bus_status("satellite_bus"),
+            "solar_panel_1": self.get_solar_panel_status("solar_panel_1"),
+            "solar_panel_2": self.get_solar_panel_status("solar_panel_2"),
+            "reaction_wheel": self.get_reaction_wheel_status("reaction_wheel"),
+        }
 
     def get_communication_status(self):
         """宇宙船の通信システムの状態を取得する
