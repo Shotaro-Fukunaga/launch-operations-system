@@ -1,7 +1,8 @@
-from .base_rocket import BaseRocket
+from .rocket_base import BaseRocket
 
 
 class RocketTelemetry(BaseRocket):
+    """ロケットのテレメトリ情報を取得するためのクラス"""
     def __init__(self, krpc_connect_server_name: str, rocket_part_list: list[dict]) -> None:
         """initializer"""
         super().__init__(krpc_connect_server_name, rocket_part_list)

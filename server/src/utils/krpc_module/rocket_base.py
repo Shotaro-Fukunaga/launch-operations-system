@@ -1,55 +1,20 @@
 import math
 import krpc
 
+from src.utils.krpc_module.rocket_unit import Unit
+
 
 class BaseRocket:
-    def __init__(self, connection) -> None:
+    """ロケットの基本クラス"""
+
+    def __init__(self, connection, parts_list) -> None:
         """initializer"""
         self.conn = krpc.connect(name=connection)
         self.vessel = self.conn.space_center.active_vessel
+        self.orbit = self.vessel.orbit
         self.reference_frame = self.vessel.orbit.body.reference_frame
-
-    def find_parts_by_tag(self, tag_name) -> list:
-        """
-        指定されたタグ名に一致する宇宙船のパーツを検索し、リストとして返す
-
-        Parameters:
-            tag_name (str): 検索するパーツのタグ名
-
-        Returns:
-            list: 一致したパーツのリスト
-        """
-        matched_parts = [part for part in self.vessel.parts.all if part.tag == tag_name]
-        return matched_parts
-
-    def find_parts_by_stage(self, stage_number) -> list:
-        """
-        指定されたステージ番号に所属する宇宙船のパーツを検索し、リストとして返す。
-
-        Parameters:
-            stage_number (int): 検索するステージ番号
-
-        Returns:
-            list: 一致したパーツのリスト
-        """
-        matched_parts = [part for part in self.vessel.parts.in_stage(stage_number)]
-        return matched_parts
-
-    def find_part_by_name(self, part_name) -> list:
-        """
-        指定された名前に一致する宇宙船のパーツを検索し、最初に見つかったパーツを返す。
-        見つからない場合はNoneを返す。
-
-        Parameters:
-            part_name (str): 検索するパーツの名前
-
-        Returns:
-            Part or None: 見つかったパーツ、または見つからなかった場合はNone
-        """
-        for part in self.vessel.parts.all:
-            if part.name == part_name:
-                return part
-        return None
+        self.flight_info = self.vessel.flight(self.reference_frame)
+        self.units = {part["tag"]: Unit(vessel=self.vessel, **part) for part in parts_list}
 
     def calculate_atmospheric_drag(self) -> float:
         """
@@ -150,3 +115,72 @@ class BaseRocket:
         # 燃焼時間の見積もり
         burn_time_estimation = fuel_mass / fuel_consumption_rate
         return burn_time_estimation
+
+    def total_mass_by_group(self, group_name) -> float:
+        """
+        指定されたグループ名に属する全ユニットの総質量を計算する
+
+        Args:
+            group_name (str): 質量を計算するユニットのグループ名
+
+        Returns:
+            float: 指定されたグループに属するユニットの総質量
+        """
+        total_mass = 0
+        for unit in self.units.values():
+            if unit.group_name == group_name:
+                total_mass += getattr(unit.part, "mass", 0)
+        return total_mass
+
+    def get_unit_group_name(self, group_name) -> list:
+        """
+        指定されたグループ名に一致するユニットのリストを返す
+
+        Args:
+            group_name (str): 取得するユニットのグループ名
+
+        Returns:
+            list: 指定されたグループ名に一致するユニットオブジェクトのリスト
+        """
+        unit_list = []
+        for unit in self.units.values():
+            if unit.group_name == group_name:
+                unit_list.append(unit)
+        return unit_list
+
+    def get_unit_by_name(self, unit_name) -> Unit:
+        """
+        指定されたユニット名に一致する最初のユニットを返す
+
+        Args:
+            unit_name (str): 検索するユニットの名前
+
+        Returns:
+            Unit: 指定された名前に一致するユニットオブジェクト。一致するユニットがない場合は None
+        """
+        for unit in self.units.values():
+            if unit.unit_name == unit_name:
+                return unit
+        return None
+
+    def get_all_unit_status(self) -> dict:
+        """
+        登録されている全ユニットのステータスを返す
+
+        Returns:
+            dict: 各ユニット名をキーとし、そのステータスを値とする辞書
+        """
+        return {unit.unit_name: unit.status for unit in self.units.values()}
+
+    def find_parts_by_tag(self, tag_name) -> list:
+        """
+        指定されたタグ名に一致する宇宙船のパーツを検索し、リストとして返す
+
+        Parameters:
+            tag_name (str): 検索するパーツのタグ名
+
+        Returns:
+            list: 一致したパーツのリスト
+        """
+        matched_parts = [part for part in self.vessel.parts.all if part.tag == tag_name]
+        return matched_parts
