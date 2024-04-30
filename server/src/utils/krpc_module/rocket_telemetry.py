@@ -1,11 +1,15 @@
-from .rocket_base import BaseRocket
+from .rocket_core import RocketCore
 
 
-class RocketTelemetry(BaseRocket):
+class RocketTelemetry:
     """ロケットのテレメトリ情報を取得するためのクラス"""
-    def __init__(self, krpc_connect_server_name: str, rocket_part_list: list[dict]) -> None:
+
+    def __init__(self, rocket_core: RocketCore) -> None:
         """initializer"""
-        super().__init__(krpc_connect_server_name, rocket_part_list)
+        self.rocket_core = rocket_core
+        self.vessel = self.rocket_core.vessel
+        self.orbit = self.rocket_core.vessel.orbit
+        self.flight_info = self.rocket_core.vessel.flight(self.rocket_core.reference_frame)
 
     def get_all_engines_status(self):
         """宇宙船のすべてのエンジンの基本ステータス情報を取得する
@@ -89,7 +93,7 @@ class RocketTelemetry(BaseRocket):
                 - packet_size (float): 送信するデータパケットのサイズ
                 - packet_resource_cost (float): データパケット送信のリソースコスト
         """
-        unit = self.get_unit_by_name(unit_name)
+        unit = self.rocket_core.get_unit_by_name(unit_name)
         return {
             "state": unit.part.antenna.state,
             "power": unit.part.antenna.power,
@@ -111,7 +115,7 @@ class RocketTelemetry(BaseRocket):
                 - energy_flow (float): ソーラーパネルからのエネルギー流出量
                 - sun_exposure (float): ソーラーパネルの太陽への露出度
         """
-        unit = self.get_unit_by_name(unit_name)
+        unit = self.rocket_core.get_unit_by_name(unit_name)
         return {
             "state": unit.part.solar_panel.state,
             "energy_flow": unit.part.solar_panel.energy_flow,
@@ -131,7 +135,7 @@ class RocketTelemetry(BaseRocket):
                 - available_torque (tuple): 利用可能なトルクの量（ピッチ、ヨー、ロール）
                 - max_torque (tuple): 最大トルクの量（ピッチ、ヨー、ロール）
         """
-        unit = self.get_unit_by_name(unit_name)
+        unit = self.rocket_core.get_unit_by_name(unit_name)
         return {
             "active": unit.part.reaction_wheel.active,
             "available_torque": unit.part.reaction_wheel.available_torque,
@@ -151,7 +155,7 @@ class RocketTelemetry(BaseRocket):
                 - current_charge (float): 現在の電荷量
                 - max_charge (float): 最大電荷容量
         """
-        unit = self.get_unit_by_name(unit_name)
+        unit = self.rocket_core.get_unit_by_name(unit_name)
         return {
             "shielded": unit.part.shielded,
             "current_charge": unit.part.resources.amount("ElectricCharge"),
@@ -172,7 +176,7 @@ class RocketTelemetry(BaseRocket):
             - atmospheric_drag (float): 大気抵抗加速度（自己計算）
             - terminal_velocity (float): 終端速度
         """
-        flight_info = self.vessel.flight(self.reference_frame)
+        flight_info = self.flight_info
         return {
             "angle_of_attack": flight_info.angle_of_attack,
             "sideslip_angle": flight_info.sideslip_angle,
@@ -180,7 +184,7 @@ class RocketTelemetry(BaseRocket):
             "dynamic_pressure": flight_info.dynamic_pressure,
             "atmosphere_density": flight_info.atmosphere_density,
             "atmospheric_pressure": flight_info.static_pressure,
-            "atmospheric_drag": self.calculate_atmospheric_drag_acceleration(),
+            "atmospheric_drag": self.rocket_core.calculate_atmospheric_drag_acceleration(),
             "terminal_velocity": flight_info.terminal_velocity,
         }
 
@@ -203,8 +207,8 @@ class RocketTelemetry(BaseRocket):
             - argument_of_periapsis (float): 近点引数
             - prograde (float): 前進方向のベクトル
         """
-        orbit = self.vessel.orbit
-        flight_info = self.vessel.flight(self.reference_frame)
+        orbit = self.orbit
+        flight_info = self.flight_info
 
         return {
             "orbital_speed": orbit.speed,
@@ -240,7 +244,8 @@ class RocketTelemetry(BaseRocket):
             - biome (str): バイオーム
             - situation (VesselSituation): 宇宙船の状況
         """
-        flight_info = self.vessel.flight(self.reference_frame)
+        flight_info = self.flight_info
+        vessel = self.vessel
         return {
             "altitude_als": flight_info.mean_altitude,
             "altitude_true": flight_info.surface_altitude,
@@ -252,8 +257,8 @@ class RocketTelemetry(BaseRocket):
             "surface_horizontal_speed": flight_info.horizontal_speed,
             "latitude": flight_info.latitude,
             "longitude": flight_info.longitude,
-            "biome": self.vessel.biome,
-            "situation": str(self.vessel.situation),
+            "biome": vessel.biome,
+            "situation": str(vessel.situation),
         }
 
     def get_delta_v_status(self):
@@ -280,9 +285,9 @@ class RocketTelemetry(BaseRocket):
             - time (float): 燃焼時間
         """
 
-        payload_mass = self.total_mass_by_group("payload_stage")
-        first_stage_mass = self.total_mass_by_group("first_stage")
-        second_stage_mass = self.total_mass_by_group("second_stage")
+        payload_mass = self.rocket_core.total_mass_by_group("payload_stage")
+        first_stage_mass = self.rocket_core.total_mass_by_group("first_stage")
+        second_stage_mass = self.rocket_core.total_mass_by_group("second_stage")
 
         stages_start_mass = [
             payload_mass + second_stage_mass,  # セカンドステージのスタート質量
@@ -302,9 +307,9 @@ class RocketTelemetry(BaseRocket):
             atom_isp = engine["specific_impulse_at"]
             slt = max_thrust / (start_mass * 9.81)
             twr = max_vac_thrust / (start_mass * 9.81)
-            vac_delta_v = self.calculate_delta_v(vac_isp, fuel_mass, start_mass)
-            atom_delta_v = self.calculate_delta_v(atom_isp, fuel_mass, start_mass)
-            burn_time = self.burn_time_estimation(atom_isp, fuel_mass, max_thrust)
+            vac_delta_v = self.rocket_core.calculate_delta_v(vac_isp, fuel_mass, start_mass)
+            atom_delta_v = self.rocket_core.calculate_delta_v(atom_isp, fuel_mass, start_mass)
+            burn_time = self.rocket_core.burn_time_estimation(atom_isp, fuel_mass, max_thrust)
             end_mass = start_mass - fuel_mass
 
             delta_v_list.append(
@@ -340,8 +345,8 @@ class RocketTelemetry(BaseRocket):
         }
 
     def get_fuel_status(self):
-        main_tank = self.get_unit_by_name("main_tank")
-        second_tank = self.get_unit_by_name("second_tank")
+        main_tank = self.rocket_core.get_unit_by_name("main_tank")
+        second_tank = self.rocket_core.get_unit_by_name("second_tank")
 
         return {
             "main_tank": main_tank.get_fuel_status(),
@@ -362,16 +367,18 @@ class RocketTelemetry(BaseRocket):
             - max_skin_temperature (float): パーツの表皮の最大許容温度
             - thermal_percentage (float): パーツの温度が最大許容温度に対してどの程度の割合であるかをパーセントで表示
         """
-        satellite_bus_unit = self.get_unit_by_name("satellite_bus")
-        fairing_unit = self.get_unit_by_name("fairing")
-        second_tank_unit = self.get_unit_by_name("second_tank")
-        second_engine_unit = self.get_unit_by_name("second_engine")
-        main_tank_unit = self.get_unit_by_name("main_tank")
-        main_engine_unit = self.get_unit_by_name("main_engine")
+        satellite_bus_unit = self.rocket_core.get_unit_by_name("satellite_bus")
+        fairing_unit_1 = self.rocket_core.get_unit_by_name("fairing_1")
+        fairing_unit_2 = self.rocket_core.get_unit_by_name("fairing_2")
+        second_tank_unit = self.rocket_core.get_unit_by_name("second_tank")
+        second_engine_unit = self.rocket_core.get_unit_by_name("second_engine")
+        main_tank_unit = self.rocket_core.get_unit_by_name("main_tank")
+        main_engine_unit = self.rocket_core.get_unit_by_name("main_engine")
 
         return {
             "satellite_bus": satellite_bus_unit.get_temperature(),
-            "fairing": fairing_unit.get_temperature(),
+            "fairing_1": fairing_unit_1.get_temperature(),
+            "fairing_2": fairing_unit_2.get_temperature(),
             "second_tank": second_tank_unit.get_temperature(),
             "second_engine": second_engine_unit.get_temperature(),
             "main_tank": main_tank_unit.get_temperature(),
@@ -392,7 +399,7 @@ class RocketTelemetry(BaseRocket):
                 - reaction_wheel (dict): リアクションホイールの状態に関する詳細情報
         """
         return {
-            "payload_mass": self.total_mass_by_group("payload_stage"),
+            "payload_mass": self.rocket_core.total_mass_by_group("payload_stage"),
             "anttena": self.get_antenna_status("anttena"),
             "satellite_bus": self.get_satellite_bus_status("satellite_bus"),
             "solar_panel_1": self.get_solar_panel_status("solar_panel_1"),
@@ -434,4 +441,54 @@ class RocketTelemetry(BaseRocket):
             "signal_delay": comm.signal_delay,
             "total_comm_power": comm.power,
             "control_path": control_path_info,
+        }
+
+    def get_telemetry_data(self):
+        """
+        ロケットの現在のテレメトリデータを集約して返す
+
+        Returns:
+            dict: 各カテゴリはそれぞれ独立した辞書として返される
+            - surface_info (dict):ロケットの表面情報
+            - orbit_info (dict):軌道情報
+            - atmosphere_info (dict):大気情報
+            - delta_v_status (dict):デルタVステータス
+        """
+        surface_info = self.get_surface_info()
+        orbit_info = self.get_orbit_info()
+        atmosphere_info = self.get_atmosphere_info()
+        delta_v_status = self.get_delta_v_status()
+        return {
+            "surface_info": surface_info,
+            "orbit_info": orbit_info,
+            "atmosphere_info": atmosphere_info,
+            "delta_v_status": delta_v_status,
+        }
+
+    def get_rocket_data(self):
+        """
+        ロケットの全体的な状態データを取得し、整理して返す
+
+        Returns:
+            dict: ロケットの各種状態を含む辞書。各カテゴリはそれぞれ独立した辞書として返される
+            - fuel_status (dict): ロケットの燃料状態
+            - unit_status (dict): ロケットのユニット状態
+            - payload_status (dict): ペイロード状態
+            - thermal_status (dict): ロケットの熱状態
+            - delta_v_status (dict): ロケットのデルタVステータス
+            - communication_status (dict): ロケットの通信状態
+        """
+        fuel_status = self.get_fuel_status()
+        unit_status = self.rocket_core.get_all_unit_status()
+        payload_status = self.get_payload_status()
+        thermal_status = self.get_thermal_status()
+        delta_v_status = self.get_delta_v_status()
+        communication_status = self.get_communication_status()
+        return {
+            "fuel_status": fuel_status,
+            "unit_status": unit_status,
+            "payload_status": payload_status,
+            "thermal_status": thermal_status,
+            "delta_v_status": delta_v_status,
+            "communication_status": communication_status,
         }

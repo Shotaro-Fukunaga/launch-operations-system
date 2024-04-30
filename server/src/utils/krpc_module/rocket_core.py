@@ -1,20 +1,32 @@
 import math
 import krpc
-
+import datetime
+import time
 from src.utils.krpc_module.rocket_unit import Unit
 
 
-class BaseRocket:
+class RocketCore:
     """ロケットの基本クラス"""
+    _instance = None
 
-    def __init__(self, connection, parts_list) -> None:
-        """initializer"""
-        self.conn = krpc.connect(name=connection)
-        self.vessel = self.conn.space_center.active_vessel
-        self.orbit = self.vessel.orbit
-        self.reference_frame = self.vessel.orbit.body.reference_frame
-        self.flight_info = self.vessel.flight(self.reference_frame)
-        self.units = {part["tag"]: Unit(vessel=self.vessel, **part) for part in parts_list}
+    def __new__(cls, connection, rocket_schema_list):
+        if cls._instance is None:
+            cls._instance = super(RocketCore, cls).__new__(cls)
+        cls._instance.initialize(connection, rocket_schema_list)
+        return cls._instance
+
+    def initialize(self, connection, rocket_schema_list):
+        # Initialization only if data is updated or instance is uninitialized
+        if not hasattr(self, 'is_initialized') or self.rocket_schema_list != rocket_schema_list:
+            self.conn = krpc.connect(name=connection)
+            self.vessel = self.conn.space_center.active_vessel
+            self.orbit = self.vessel.orbit
+            self.reference_frame = self.vessel.orbit.body.reference_frame
+            self.flight_info = self.vessel.flight(self.reference_frame)
+            self.units = {part["tag"]: Unit(vessel=self.vessel, **part) for part in rocket_schema_list}
+            self.rocket_schema_list = rocket_schema_list  # Store the schema list for comparison
+            self.is_initialized = True
+
 
     def calculate_atmospheric_drag(self) -> float:
         """
