@@ -1,5 +1,5 @@
 from .rocket_core import RocketCore
-
+from src.utils.decorators.round_output import round_output
 
 class RocketTelemetry:
     """ロケットのテレメトリ情報を取得するためのクラス"""
@@ -78,6 +78,7 @@ class RocketTelemetry:
             engines_status.append(status)
         return engines_status
 
+    
     def get_antenna_status(self, unit_name: str):
         """
         指定されたアンテナユニットの状態情報を取得する
@@ -93,15 +94,17 @@ class RocketTelemetry:
                 - packet_size (float): 送信するデータパケットのサイズ
                 - packet_resource_cost (float): データパケット送信のリソースコスト
         """
+        # TODO アンテナの状態を取得するメソッドなので、ここでunit_nameで呼び出すのはおかしい
         unit = self.rocket_core.get_unit_by_name(unit_name)
         return {
-            "state": unit.part.antenna.state,
+            # "state": getattr(unit.part.antenna, 'state', ""),
             "power": unit.part.antenna.power,
             "packet_interval": unit.part.antenna.packet_interval,
             "packet_size": unit.part.antenna.packet_size,
             "packet_resource_cost": unit.part.antenna.packet_resource_cost,
         }
 
+    
     def get_solar_panel_status(self, unit_name: str):
         """
         指定されたソーラーパネルユニットの状態情報を取得する
@@ -117,11 +120,12 @@ class RocketTelemetry:
         """
         unit = self.rocket_core.get_unit_by_name(unit_name)
         return {
-            "state": unit.part.solar_panel.state,
+            # "state": getattr(unit.part.solar_panel, 'state', ""),
             "energy_flow": unit.part.solar_panel.energy_flow,
             "sun_exposure": unit.part.solar_panel.sun_exposure,
         }
 
+    
     def get_reaction_wheel_status(self, unit_name: str):
         """
         指定されたリアクションホイールユニットの状態情報を取得する
@@ -142,6 +146,7 @@ class RocketTelemetry:
             "max_torque": unit.part.reaction_wheel.max_torque,
         }
 
+    
     def get_satellite_bus_status(self, unit_name: str):
         """
         指定されたサテライトバスユニットの状態情報を取得する
@@ -162,6 +167,7 @@ class RocketTelemetry:
             "max_charge": unit.part.resources.max("ElectricCharge"),
         }
 
+    
     def get_atmosphere_info(self):
         """宇宙船の現在位置での大気情報を取得する
 
@@ -188,6 +194,7 @@ class RocketTelemetry:
             "terminal_velocity": flight_info.terminal_velocity,
         }
 
+    
     def get_orbit_info(self):
         """
         宇宙船の軌道に関する情報を取得する
@@ -225,6 +232,7 @@ class RocketTelemetry:
             "prograde": flight_info.prograde,
         }
 
+    
     def get_surface_info(self):
         """
         宇宙船が現在接触している表面の情報を取得する
@@ -344,6 +352,7 @@ class RocketTelemetry:
             "delta_v_list": delta_v_list,
         }
 
+    
     def get_fuel_status(self):
         main_tank = self.rocket_core.get_unit_by_name("main_tank")
         second_tank = self.rocket_core.get_unit_by_name("second_tank")
@@ -353,6 +362,7 @@ class RocketTelemetry:
             "second_tank": second_tank.get_fuel_status(),
         }
 
+   
     def get_thermal_status(self):
         """ロケット各ステージの熱関連データを返す
 
@@ -385,6 +395,7 @@ class RocketTelemetry:
             "main_engine": main_engine_unit.get_temperature(),
         }
 
+    
     def get_payload_status(self):
         """
         ペイロードステージに関連する部品の重量と状態情報を取得する
@@ -407,6 +418,7 @@ class RocketTelemetry:
             "reaction_wheel": self.get_reaction_wheel_status("reaction_wheel"),
         }
 
+    
     def get_communication_status(self):
         """宇宙船の通信システムの状態を取得する
 
@@ -443,6 +455,7 @@ class RocketTelemetry:
             "control_path": control_path_info,
         }
 
+    @round_output
     def get_telemetry_data(self):
         """
         ロケットの現在のテレメトリデータを集約して返す
@@ -465,6 +478,7 @@ class RocketTelemetry:
             "delta_v_status": delta_v_status,
         }
 
+    @round_output
     def get_rocket_data(self):
         """
         ロケットの全体的な状態データを取得し、整理して返す

@@ -22,6 +22,7 @@ class Unit:
                 return part
         return None
 
+    # TODO 下のクラスに移動する
     def activate_engine(self) -> dict:
         """エンジンが存在し、アクティブであればステータスを更新"""
         if self.part and getattr(self.part, "engine", None) and self.part.engine.active and self.status == 0:
@@ -78,18 +79,15 @@ class Unit:
         if self.part_type != "tank" or not self.part:
             return None
 
-        resource_list = []
+        resource_dict = {}
         resources = self.part.resources.all
 
         for resource in resources:
             percentage = (resource.amount / resource.max * 100) if resource.max > 0 else 0
-            resource_list.append(
-                {
-                    "name": resource.name,
-                    "amount": resource.amount,
-                    "max": resource.max,
-                    "percentage": percentage,
-                }
-            )
+            resource_dict[resource.name] = {
+                "amount": resource.amount,
+                "max": resource.max,
+                "percentage": percentage,
+            }
 
-        return resource_list
+        return resource_dict

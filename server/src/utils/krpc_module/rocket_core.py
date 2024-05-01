@@ -15,6 +15,7 @@ class RocketCore:
         cls._instance.initialize(connection, rocket_schema_list)
         return cls._instance
 
+    # TODO KRPCの接続を管理する処理の実装
     def initialize(self, connection, rocket_schema_list):
         # Initialization only if data is updated or instance is uninitialized
         if not hasattr(self, 'is_initialized') or self.rocket_schema_list != rocket_schema_list:
