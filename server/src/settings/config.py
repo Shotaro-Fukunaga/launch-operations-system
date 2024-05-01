@@ -7,9 +7,9 @@ def open_json(file_path: str) -> dict:
     return data
 
 # TODO あとでリファクタリングする
-EVENT_PLANS = open_json("src/event_records/event_record_plans.json")
-FLIGHT_PLANS = open_json("src/flight_records/flight_record_plans.json")
-ROCKET_SCHEMAS = open_json("src/rocket_schema.json")
+
+FLIGHT_PLANS = open_json("src/settings/flight_plans.json")
+ROCKET_SCHEMAS = open_json("src/settings/rocket_schema.json")
 rocket_schema_list = ROCKET_SCHEMAS.get("rocket_schemas", [])
 
 # パーツのステータスコードの定義

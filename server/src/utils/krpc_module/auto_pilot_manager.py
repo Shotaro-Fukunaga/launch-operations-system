@@ -30,18 +30,14 @@ class AutoPilotManager:
         target_apoapsis: int = 200000,
         target_orbit_inc: float = 39.39,
         target_orbit_speed: int = 7788,
-        max_q_altitude: int = 11200,
     ):
+        self.target_periapsis = target_periapsis
+        self.target_apoapsis = target_apoapsis
+        self.target_orbit_inc = target_orbit_inc
+        self.target_orbit_speed = target_orbit_speed
+
         # ユニットを初期化
         self.vessel_manager.unit_initiliaze()
-
-        self.event_manager.set_target_orbit(
-            target_periapsis=target_periapsis,
-            target_apoapsis=target_apoapsis,
-            target_orbit_speed=target_orbit_speed,
-            target_orbit_inc=target_orbit_inc,
-            max_q_altitude=max_q_altitude,
-        )
 
         # 打ち上げ時間まで待機
         self._wait_for_launch(launch_date)
@@ -59,10 +55,26 @@ class AutoPilotManager:
         # アクティベート次のステージ
         self.vessel.control.activate_next_stage()
 
-        # SASを有効にし、ラジアルイン方向に設定
-        self.vessel.control.sas = True  # SASを有効にする
-        time.sleep(1)  # SASが有効化されるのを少し待つ
+        # SASを有効にし、アンチラジアル方向に設定
+        self.vessel.control.sas = True
+        time.sleep(3)  # SASが有効化されるのを少し待つ
         self.vessel.control.sas_mode = self.vessel.control.sas_mode.anti_radial
+
+        # 軌道データと目標との差を記録
+        current_periapsis = self.vessel.orbit.periapsis_altitude
+        periapsis_diff = current_periapsis - self.target_periapsis
+        self.event_manager.record_data("Periapsis Difference", f"Periapsis diff: {periapsis_diff} m", 2)
+        time.sleep(1)
+
+        current_apoapsis = self.vessel.orbit.apoapsis_altitude
+        apoapsis_diff = current_apoapsis - self.target_apoapsis
+        self.event_manager.record_data("Apoapsis Difference", f"Apoapsis diff: {apoapsis_diff} m", 2)
+        time.sleep(1)
+
+        current_speed = self.vessel.orbit.speed
+        speed_diff = current_speed - self.target_orbit_speed
+        self.event_manager.record_data("Speed Difference", f"Speed diff: {speed_diff} m/s", 2)
+        time.sleep(1)
 
         # 打ち上げ完了とその記録
         self.event_manager.record_data("Launch", "Launch sequence completed.", 2)

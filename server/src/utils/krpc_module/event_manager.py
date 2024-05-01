@@ -1,6 +1,6 @@
 import logging
 
-from src.config import STANDBY, ACTIVE, DETACHED
+from src.settings.config import STANDBY, ACTIVE, DETACHED
 from src.utils.krpc_module.vessel_manager import VesselManager
 from src.utils.krpc_module.part_unit import PartUnit
 import json
@@ -23,24 +23,7 @@ class EventManager:
         # VesselManagerのflight_recordsに参照でリンクさせる
         self.records: list = self.vessel_manager.flight_records
         self.max_q_passed = False
-        self.orbital_speed_exceeded = False
-        self.apoapsis_exceeded = False
-        self.periapsis_exceeded = False
-        self.set_target_orbit()
-
-    def set_target_orbit(
-        self,
-        target_apoapsis=0,
-        target_periapsis=0,
-        target_orbit_speed=0,
-        target_orbit_inc=0,
-        max_q_altitude=0,
-    ) -> None:
-        self.target_apoapsis = target_apoapsis
-        self.target_periapsis = target_periapsis
-        self.target_orbit_speed = target_orbit_speed
-        self.target_orbit_inc = target_orbit_inc
-        self.max_q_altitude = max_q_altitude
+        self.max_q_altitude = 11200
 
     def clear_records(self) -> None:
         self.records = []
@@ -98,9 +81,6 @@ class EventManager:
             else:
                 self._check_unit(unit)
         self._check_max_q()
-        self._check_orbital_speed()
-        self._check_apoapsis()
-        self._check_periapsis()
         self.record_empty_data()
 
     def record_empty_data(self):
@@ -149,27 +129,6 @@ class EventManager:
     def _check_max_q(self) -> None:
         """Check if the vessel has passed the maximum dynamic pressure."""
         current_altitude = self.flight_info.surface_altitude
-        if self.max_q_altitude == current_altitude and not self.max_q_passed:
+        if current_altitude > self.max_q_altitude and not self.max_q_passed:
             self.max_q_passed = True
             self.record_data("Max Q Passed", "Max Q altitude has been passed.", 2)
-
-    def _check_orbital_speed(self) -> None:
-        """Check if the vessel's orbital speed has exceeded the target speed."""
-        current_speed = self.orbit.speed
-        if current_speed > self.target_orbit_speed and not self.orbital_speed_exceeded:
-            self.orbital_speed_exceeded = True
-            self.record_data("Orbital Speed Exceeded", f"Orbital speed is greater than {self.target_orbit_speed} m/s.", 2)
-
-    def _check_apoapsis(self) -> None:
-        """Check if the vessel's apoapsis has exceeded the target altitude."""
-        current_apoapsis = self.orbit.apoapsis_altitude
-        if current_apoapsis > self.target_apoapsis and not self.apoapsis_exceeded:
-            self.apoapsis_exceeded = True
-            self.record_data("Apoapsis Exceeded", f"Apoapsis altitude is greater than {self.target_apoapsis} m.", 2)
-
-    def _check_periapsis(self) -> None:
-        """Check if the vessel's periapsis has exceeded the target altitude."""
-        current_periapsis = self.orbit.periapsis_altitude
-        if current_periapsis > self.target_periapsis and not self.periapsis_exceeded:
-            self.periapsis_exceeded = True
-            self.record_data("Periapsis Exceeded", f"Periapsis altitude is greater than {self.target_periapsis} m.", 2)
