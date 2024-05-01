@@ -1,33 +1,12 @@
 import math
-import krpc
-import datetime
-import time
-from src.utils.krpc_module.rocket_unit import Unit
+from krpc.services.spacecenter import Vessel
 
 
-class RocketCore:
-    """ロケットの基本クラス"""
-    _instance = None
+class FlightDynamics:
+    """宇宙飛行の動力学に関連する計算をまとめたクラス"""
 
-    def __new__(cls, connection, rocket_schema_list):
-        if cls._instance is None:
-            cls._instance = super(RocketCore, cls).__new__(cls)
-        cls._instance.initialize(connection, rocket_schema_list)
-        return cls._instance
-
-    # TODO KRPCの接続を管理する処理の実装
-    def initialize(self, connection, rocket_schema_list):
-        # Initialization only if data is updated or instance is uninitialized
-        if not hasattr(self, 'is_initialized') or self.rocket_schema_list != rocket_schema_list:
-            self.conn = krpc.connect(name=connection)
-            self.vessel = self.conn.space_center.active_vessel
-            self.orbit = self.vessel.orbit
-            self.reference_frame = self.vessel.orbit.body.reference_frame
-            self.flight_info = self.vessel.flight(self.reference_frame)
-            self.units = {part["tag"]: Unit(vessel=self.vessel, **part) for part in rocket_schema_list}
-            self.rocket_schema_list = rocket_schema_list  # Store the schema list for comparison
-            self.is_initialized = True
-
+    def __init__(self: "FlightDynamics", vessel: Vessel):
+        self.vessel = vessel
 
     def calculate_atmospheric_drag(self) -> float:
         """
@@ -91,8 +70,10 @@ class RocketCore:
         Returns:
             float: 計算されたデルタV（m/s）
         """
-
         g0 = 9.80665  # 地球の重力加速度（m/s²）
+        # 初期質量が0以下、比推力が0以下、燃料質量が0以下、または消費後の質量が0以下の場合、デルタVは計算できない
+        if m0 <= 0 or isp <= 0 or fuel_mass <= 0 or (m0 - fuel_mass) <= 0:
+            return 0
         mf = m0 - fuel_mass  # 燃料を消費した後の質量（kg）
         delta_v = isp * g0 * math.log(m0 / mf)  # Delta-Vの計算
         return delta_v
@@ -119,8 +100,11 @@ class RocketCore:
         Returns:
             float: 推定される燃焼時間（秒）
         """
-        # 地球の重力加速度（m/s²）
-        g0 = 9.80665  # m/s²
+        g0 = 9.80665  # 地球の重力加速度（m/s²）
+        # 比推力、推力、または燃料質量が0以下の場合、燃焼時間は計算できない
+        if isp <= 0 or available_thrust <= 0 or fuel_mass <= 0:
+            return 0
+
         # エンジンの推力（ニュートン）
         thrust = available_thrust
         # 燃料消費率（kg/s）
@@ -128,72 +112,3 @@ class RocketCore:
         # 燃焼時間の見積もり
         burn_time_estimation = fuel_mass / fuel_consumption_rate
         return burn_time_estimation
-
-    def total_mass_by_group(self, group_name) -> float:
-        """
-        指定されたグループ名に属する全ユニットの総質量を計算する
-
-        Args:
-            group_name (str): 質量を計算するユニットのグループ名
-
-        Returns:
-            float: 指定されたグループに属するユニットの総質量
-        """
-        total_mass = 0
-        for unit in self.units.values():
-            if unit.group_name == group_name:
-                total_mass += getattr(unit.part, "mass", 0)
-        return total_mass
-
-    def get_unit_group_name(self, group_name) -> list:
-        """
-        指定されたグループ名に一致するユニットのリストを返す
-
-        Args:
-            group_name (str): 取得するユニットのグループ名
-
-        Returns:
-            list: 指定されたグループ名に一致するユニットオブジェクトのリスト
-        """
-        unit_list = []
-        for unit in self.units.values():
-            if unit.group_name == group_name:
-                unit_list.append(unit)
-        return unit_list
-
-    def get_unit_by_name(self, unit_name) -> Unit:
-        """
-        指定されたユニット名に一致する最初のユニットを返す
-
-        Args:
-            unit_name (str): 検索するユニットの名前
-
-        Returns:
-            Unit: 指定された名前に一致するユニットオブジェクト。一致するユニットがない場合は None
-        """
-        for unit in self.units.values():
-            if unit.unit_name == unit_name:
-                return unit
-        return None
-
-    def get_all_unit_status(self) -> dict:
-        """
-        登録されている全ユニットのステータスを返す
-
-        Returns:
-            dict: 各ユニット名をキーとし、そのステータスを値とする辞書
-        """
-        return {unit.unit_name: unit.status for unit in self.units.values()}
-
-    def find_parts_by_tag(self, tag_name) -> list:
-        """
-        指定されたタグ名に一致する宇宙船のパーツを検索し、リストとして返す
-
-        Parameters:
-            tag_name (str): 検索するパーツのタグ名
-
-        Returns:
-            list: 一致したパーツのリスト
-        """
-        matched_parts = [part for part in self.vessel.parts.all if part.tag == tag_name]
-        return matched_parts
