@@ -1,7 +1,8 @@
 import { useState, useEffect, FC, useRef } from "react";
 import MarkerGenerator from "./MarkerGenerator";
-import { EventMarkerGenerator, EventType } from "./EventMarkerGenerator";
+import { EventMarkerGenerator } from "./EventMarkerGenerator";
 import { Countdown } from "./Countdown";
+import { EventRecord } from "../../../../types/flightRecordType";
 
 // 現在時刻の位置を計算
 const calculateCurrentTimePosition = () => {
@@ -12,7 +13,7 @@ const calculateCurrentTimePosition = () => {
 };
 
 type Props = {
-  events?: EventType[];
+  events?: EventRecord[];
 };
 
 export const TimelineBar: FC<Props> = ({ events }) => {

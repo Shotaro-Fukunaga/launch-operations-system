@@ -1,13 +1,9 @@
 import { FC } from 'react'
+import { EventRecord } from '../../../../types/flightRecordType';
 
-export type EventType = {
-  time: string
-  name: string
-  color?: string;
-}
 
 type Props = {
-  events?: EventType[]
+  events?: EventRecord[]
 
 }
 
@@ -16,13 +12,28 @@ export const EventMarkerGenerator: FC<Props> = ({
 }) => {
   const totalMinutesInDay = 24 * 60 // 1日の総分
 
-  const markers = events?.map((event,index) => {
-    const [hours, minutes] = event.time.split(':').map(Number) // "13:00" => [13, 0]
-    const eventMinutes = hours * 60 + minutes // イベントの時間を分単位で計算
+  const getColorForEventLevel = (level: number) => {
+    switch (level) {
+      case 0:
+        return 'gray'; // 通常
+      case 1:
+        return 'blue'; // 重要
+      case 2:
+        return 'red'; // エラー
+      default:
+        return 'white'; // 未定義のレベル
+    }
+  }
+
+  const markers = events?.map((event, index) => {
+    const eventDate = new Date(event.time);
+    const hours = eventDate.getHours();
+    const minutes = eventDate.getMinutes();
+    const eventMinutes = hours * 60 + minutes; // イベントの時間を分単位で計算
     const bottomPosition =
       ((totalMinutesInDay - eventMinutes) / totalMinutesInDay) * 100 // 逆順の位置を計算
 
-    const borderColor = event.color ? event.color :"white"
+    const borderColor = getColorForEventLevel(event.event_level);
     return (
       <div
         key={index}
@@ -37,7 +48,7 @@ export const EventMarkerGenerator: FC<Props> = ({
           style={{ borderColor: borderColor }}
         />
         <span className="ml-[4rem] text-xs">
-          {event.time} - {event.name}
+        {`${hours}:${minutes < 10 ? '0' + minutes : minutes}`} - {event.event_type}
         </span>
       </div>
     )

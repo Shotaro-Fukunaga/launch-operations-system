@@ -1,33 +1,31 @@
-// TerminalLog.tsx
 import React from "react";
+import { EventRecord } from "../../types/flightRecordType";
 
-export interface Log {
-  timestamp: string;
-  type: "error" | "warning" | "info";
-  text: string;
-}
-// propsの型を定義
 interface TerminalLogProps {
-  logs: Log[];
+  logs: EventRecord[];
 }
 
 const TerminalLog: React.FC<TerminalLogProps> = ({ logs }) => {
-  const renderLog = (log: Log, index: number) => {
+  const renderLog = (log: EventRecord, index: number) => {
     let color;
-    switch (log.type) {
-      case "error":
+    let logType = "info"; // デフォルトはinfoとする
+
+    switch (log.event_level) {
+      case 2: // エラーレコード
         color = "text-red-500";
+        logType = "error";
         break;
-      case "warning":
+      case 1: // 重要なレコード
         color = "text-yellow-500";
+        logType = "warning";
         break;
-      default:
+      default: // 通常のレコード
         color = "text-green-500";
     }
 
     return (
       <div key={index} className={`${color}`}>
-        {`${log.timestamp} - ${log.text}`}
+        {`${log.time} [${logType.toUpperCase()}] - ${log.event_details}`}
       </div>
     );
   };

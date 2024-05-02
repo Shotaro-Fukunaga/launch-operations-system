@@ -1,19 +1,17 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
-
-type TelemetryType = { [key: string]: string | number | string | number[] };
+import { VesselTelemetryType } from "../types/vesselTelemetryType";
+import { RocketStatusType } from "../types/rocketStatusType";
+import { FlightEventRecord } from "../types/flightRecordType";
 
 export type WebSocketContextType = {
   sendMessage: (endpoint: string, message: string) => void;
   messages: {
-    atmosphereInfo: TelemetryType;
-    orbitInfo: TelemetryType;
-    surfaceInfo: TelemetryType;
-    deltaVStatus: TelemetryType;
-    thermalStatus: TelemetryType;
-    satelliteBusStatus: TelemetryType;
-    communicationStatus: TelemetryType;
+    vesselTm: VesselTelemetryType | undefined;
+    rocketStatus: RocketStatusType | undefined;
+    flightEventRecord: FlightEventRecord | undefined;
   };
 };
+
 type WebSocketProviderProps = {
   children: ReactNode;
 };
@@ -25,72 +23,31 @@ export const WebSocketContext = createContext<WebSocketContextType | null>(
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   children,
 }) => {
-  const [atmosphereInfoMessage, setAtmosphereInfoMessage] =
-    useState<TelemetryType>({});
-  const [orbitInfoMessage, setOrbitInfoMessage] = useState<TelemetryType>({});
-  const [deltaVStatusMessage, setDeltaVStatusMessage] = useState<TelemetryType>(
-    {}
-  );
-  const [surfaceInfoMessage, setSurfaceInfoMessage] = useState<TelemetryType>(
-    {}
-  );
-  const [thermalStatusMessage, setThermalStatusMessage] =
-    useState<TelemetryType>({});
-  const [satelliteBusStatusMessage, setSatelliteBusStatusMessage] =
-    useState<TelemetryType>({});
-  const [communicationStatusMessage, setCommunicationStatusMessage] =
-    useState<TelemetryType>({});
-
-  const [orbitInfoWS, setOrbitInfoWS] = useState<WebSocket | null>(null);
-  const [surfaceInfoWS, setSurfaceInfoWS] = useState<WebSocket | null>(null);
-  const [deltaVStatusWS, setDeltaVStatusWS] = useState<WebSocket | null>(null);
-  const [thermalStatusWS, setThermalStatusWS] = useState<WebSocket | null>(
-    null
-  );
-  const [atmosphereInfoWS, setAtmosphereInfoWS] = useState<WebSocket | null>(
-    null
-  );
-  const [satelliteBusStatusWS, setSatelliteBusStatusWS] =
-    useState<WebSocket | null>(null);
-  const [communicationStatusWS, setCommunicationStatusWS] =
+  const [vesselTmData, setVesselTmData] = useState<VesselTelemetryType>();
+  const [vesselTmWS, setVesselTmWS] = useState<WebSocket | null>(null);
+  const [rocketStatusData, setRocketStatusData] = useState<RocketStatusType>();
+  const [rocketStatusWS, setRocketStatusWS] = useState<WebSocket | null>(null);
+  const [flightEventRecordData, setFlightEventRecordData] =
+    useState<FlightEventRecord>();
+  const [flightEventRecordWS, setFlightEventRecordWS] =
     useState<WebSocket | null>(null);
 
   useEffect(() => {
     const endpoints = [
       {
-        url: "ws://localhost:8000/ws/atmosphere_info",
-        setWs: setAtmosphereInfoWS,
-        setMessage: setAtmosphereInfoMessage,
+        url: "ws://localhost:8000/ws/vessel-telemetry",
+        setWs: setVesselTmWS,
+        setMessage: setVesselTmData,
       },
       {
-        url: "ws://localhost:8000/ws/orbit_info",
-        setWs: setOrbitInfoWS,
-        setMessage: setOrbitInfoMessage,
+        url: "ws://localhost:8000/ws/rocket-status",
+        setWs: setRocketStatusWS,
+        setMessage: setRocketStatusData,
       },
       {
-        url: "ws://localhost:8000/ws/surface_info",
-        setWs: setSurfaceInfoWS,
-        setMessage: setSurfaceInfoMessage,
-      },
-      {
-        url: "ws://localhost:8000/ws/delta_v_status",
-        setWs: setDeltaVStatusWS,
-        setMessage: setDeltaVStatusMessage,
-      },
-      {
-        url: "ws://localhost:8000/ws/thermal_status",
-        setWs: setThermalStatusWS,
-        setMessage: setThermalStatusMessage,
-      },
-      {
-        url: "ws://localhost:8000/ws/satellite_bus_status",
-        setWs: setSatelliteBusStatusWS,
-        setMessage: setSatelliteBusStatusMessage,
-      },
-      {
-        url: "ws://localhost:8000/ws/communication_status",
-        setWs: setCommunicationStatusWS,
-        setMessage: setCommunicationStatusMessage,
+        url: "ws://localhost:8000/ws/flight-records",
+        setWs: setFlightEventRecordWS,
+        setMessage: setFlightEventRecordData,
       },
     ];
 
@@ -103,7 +60,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       websocket.onmessage = (evt) => {
         try {
           const data = JSON.parse(evt.data);
-          // console.log(`Data received from ${url}:`, data);
           setMessage(data);
         } catch (error) {
           console.error("Error parsing JSON!", error);
@@ -127,13 +83,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
   const sendMessage = (endpoint: string, message: string) => {
     const websockets: { [key: string]: WebSocket | null } = {
-      atmosphereInfo: atmosphereInfoWS,
-      orbitInfo: orbitInfoWS,
-      surfaceInfo: surfaceInfoWS,
-      deltaVStatus: deltaVStatusWS,
-      thermalStatus: thermalStatusWS,
-      satelliteBusStatus: satelliteBusStatusWS,
-      communicationStatus: communicationStatusWS,
+      vesselTm: vesselTmWS,
+      rocketStatus: rocketStatusWS,
+      flightEventRecord: flightEventRecordWS,
     };
 
     const websocket = websockets[endpoint];
@@ -145,13 +97,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const value = {
     sendMessage,
     messages: {
-      atmosphereInfo: atmosphereInfoMessage,
-      orbitInfo: orbitInfoMessage,
-      surfaceInfo: surfaceInfoMessage,
-      deltaVStatus: deltaVStatusMessage,
-      thermalStatus: thermalStatusMessage,
-      satelliteBusStatus: satelliteBusStatusMessage,
-      communicationStatus: communicationStatusMessage,
+      vesselTm: vesselTmData,
+      rocketStatus: rocketStatusData,
+      flightEventRecord: flightEventRecordData,
     },
   };
 
