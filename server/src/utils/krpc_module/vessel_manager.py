@@ -14,6 +14,7 @@ class VesselManager:
         self.telemetry_manager = TelemetryManager(self)
         self.rocket_schema_list = rocket_schema_list
         self.flight_records = []
+        self.event_records = []
         self.unit_initiliaze()
 
     def unit_initiliaze(self) -> None:
@@ -28,7 +29,8 @@ class VesselManager:
         return self.telemetry_manager.get_rocket_status()
 
     def get_flight_records(self) -> list[dict]:
-        return self.flight_records
+        return {"flight_records": self.flight_records, "event_records": self.event_records}
+
 
     def get_units_by_part_type(self, part_type) -> list[PartUnit]:
         unit_list = []

@@ -1,10 +1,13 @@
 from typing import TYPE_CHECKING
-
+import logging
 from src.utils.decorators.round_output import round_output
 from src.utils.krpc_module.flight_dynamics import FlightDynamics
 
 if TYPE_CHECKING:
     from src.utils.krpc_module.vessel_manager import VesselManager
+
+
+logger = logging.getLogger(__name__)
 
 class TelemetryManager:
     """ロケットのテレメトリ情報を取得するためのクラス"""
@@ -31,8 +34,8 @@ class TelemetryManager:
             "fairing_2": self.get_fairing_status,
             "main_tank": self.get_tank_status,
             "second_tank": self.get_tank_status,
-            "main_engine": self.get_engine_status,
-            "second_engine": self.get_engine_status,
+            "main_engine": self.get_delta_v_status,
+            "second_engine": self.get_delta_v_status,
             "solar_panel_1": self.get_solar_panel_status,
             "solar_panel_2": self.get_solar_panel_status,
             "reaction_wheel": self.get_reaction_wheel_status,
@@ -54,11 +57,16 @@ class TelemetryManager:
 
     def get_fairing_status(self, unit_name: str):
         unit = self.vessel_manager.get_unit_by_name(unit_name)
+        if unit.part is not None and hasattr(unit.part, "dynamic_pressure"):
+            dynamic_pressure = unit.part.dynamic_pressure
+        else:
+            dynamic_pressure = 0
+
         data = {
             "status": unit.status,
-            "dynamic_pressure": getattr(unit.part, "dynamic_pressure", 0),
-            "temperature": getattr(unit.part, "temperature", 0),
-            "max_temperature": getattr(unit.part, "max_temperature", 0),
+            "dynamic_pressure": dynamic_pressure,
+            "temperature": getattr(unit.part, "temperature", 0) if unit.part else 0,
+            "max_temperature": getattr(unit.part, "max_temperature", 0) if unit.part else 0,
         }
         return data
 
@@ -96,15 +104,19 @@ class TelemetryManager:
         if not unit or not unit.part:
             return {}
 
-        resource_dict = {}
+        resource_dict = {
+            "status": unit.status,
+            "temperature": getattr(unit.part, "temperature", 0),
+            "max_temperature": getattr(unit.part, "max_temperature", 0),
+        }
         resources = unit.part.resources.all
 
         for resource in resources:
-            resource_dict[resource.name] = {
+            dict_key = "lqd_oxygen" if resource.name == "LqdOxygen" else "fuel"
+            resource_dict[dict_key] = {
+                "name": getattr(resource, "name", ""),
                 "amount": getattr(resource, "amount", 0),
                 "max": getattr(resource, "max", 0),
-                "temperature": getattr(unit.part, "temperature", 0),
-                "max_temperature": getattr(unit.part, "max_temperature", 0),
             }
 
         return resource_dict
@@ -245,6 +257,55 @@ class TelemetryManager:
         # 両方の辞書をマージして返す
         return {**bus_status, **communication_status}
 
+    def get_delta_v_status(self, unit_name: str):
+        """
+        指定されたエンジンのデルタVステータスを計算して返す。
+
+        Args:
+            engine_name (str): 'main_engine' または 'second_engine' のいずれかのエンジン名
+
+        Returns:
+            dict: 指定エンジンのデルタV情報を含む辞書
+        """
+        engine_status = self.get_engine_status(unit_name)
+        payload_mass = self.vessel_manager.get_total_mass_by_group("payload_stage")
+        first_stage_mass = self.vessel_manager.get_total_mass_by_group("first_stage")
+        second_stage_mass = self.vessel_manager.get_total_mass_by_group("second_stage")
+
+        if unit_name == "main_engine":
+            start_mass = payload_mass + first_stage_mass + second_stage_mass
+        elif unit_name == "second_engine":
+            start_mass = payload_mass + second_stage_mass
+        else:
+            raise ValueError("Invalid engine name provided. Use 'main_engine' or 'second_engine'.")
+
+        vac_isp = engine_status["vacuum_specific_impulse"]
+        atom_isp = engine_status["specific_impulse_at"]
+        fuel_mass = engine_status["propellant_mass"]
+        vac_delta_v = self.flight_dynamics.calculate_delta_v(vac_isp, fuel_mass, start_mass)
+        atom_delta_v = self.flight_dynamics.calculate_delta_v(atom_isp, fuel_mass, start_mass)
+        burn_time = self.flight_dynamics.burn_time_estimation(atom_isp, fuel_mass, engine_status["max_thrust"])
+
+        delta_v_info = {
+            "status": engine_status["status"],
+            "start_mass": start_mass,
+            "end_mass": start_mass - fuel_mass,
+            "burned_mass": fuel_mass,
+            "max_thrust": engine_status["max_thrust"],
+            "twr": engine_status["thrust"] / (start_mass * 9.81),
+            "slt": engine_status["available_thrust"] / (start_mass * 9.81),
+            "isp": atom_isp,
+            "atom_delta_v": atom_delta_v,
+            "vac_delta_v": vac_delta_v,
+            "burn_time": burn_time,
+            "temperature": engine_status["max_temperature"],
+            "max_temperature": engine_status["max_temperature"],
+        }
+
+        return delta_v_info
+
+    ###########################################################################
+
     def get_delta_v_info(self):
         """
         ロケットのデルタVステータスを返す
@@ -326,17 +387,20 @@ class TelemetryManager:
             - atmospheric_drag (float): 大気抵抗加速度（自己計算）
             - terminal_velocity (float): 終端速度
         """
-        flight_info = self.flight_info
-        return {
-            "angle_of_attack": flight_info.angle_of_attack,
-            "sideslip_angle": flight_info.sideslip_angle,
-            "mach": flight_info.mach,
-            "dynamic_pressure": flight_info.dynamic_pressure,
-            "atmosphere_density": flight_info.atmosphere_density,
-            "atmospheric_pressure": flight_info.static_pressure,
-            "atmospheric_drag": self.flight_dynamics.calculate_atmospheric_drag_acceleration(),
-            "terminal_velocity": flight_info.terminal_velocity,
-        }
+        try:
+            flight_info = self.flight_info
+            return {
+                "angle_of_attack": flight_info.angle_of_attack,
+                "sideslip_angle": flight_info.sideslip_angle,
+                "mach": flight_info.mach,
+                "dynamic_pressure": flight_info.dynamic_pressure,
+                "atmosphere_density": flight_info.atmosphere_density,
+                "atmospheric_pressure": flight_info.static_pressure,
+                "atmospheric_drag": self.flight_dynamics.calculate_atmospheric_drag_acceleration(),
+                "terminal_velocity": flight_info.terminal_velocity,
+            }
+        except Exception:
+            logger.exception("Failed to get atmosphere info.")
 
     def get_orbit_info(self):
         """

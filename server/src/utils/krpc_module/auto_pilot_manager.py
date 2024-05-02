@@ -1,6 +1,7 @@
 import time
 import logging
 import threading
+from src.settings.config import EVENT_NORMAL, EVENT_IMPORTANT
 from datetime import datetime, timezone
 from src.utils.krpc_module.event_manager import EventManager
 from src.utils.krpc_module.vessel_manager import VesselManager
@@ -12,16 +13,36 @@ class AutoPilotManager:
     def __init__(self, vessel_manager: VesselManager):
         self.vessel_manager = vessel_manager
         self.vessel = vessel_manager.vessel
+        self.flight_info = vessel_manager.flight_info
+        self.orbit = vessel_manager.orbit
         self.client = vessel_manager.client
         self.event_manager = EventManager(vessel_manager)
+        self.flight_records = vessel_manager.flight_records
 
     def _wait_for_launch(self, launch_date: datetime):
         while True:
             time_diff = launch_date - datetime.now(timezone.utc)
             if time_diff.total_seconds() <= 0:
                 break
-            logger.info(f"Waiting for launch: {time_diff.total_seconds()} seconds remaining")
+            self.event_manager.record_data(f"Waiting for launch: {time_diff.total_seconds()} seconds remaining", EVENT_NORMAL)
             time.sleep(1)
+
+    def record_data(self) -> None:
+        """飛行データを記録する"""
+        flight_info = self.vessel_manager.flight_info
+        data = {
+            "time": datetime.now(timezone.utc).isoformat(),
+            "heading": flight_info.heading,
+            "altitude": flight_info.surface_altitude,
+            "latitude": flight_info.latitude,
+            "longitude": flight_info.longitude,
+            "orbital_speed": self.orbit.speed,
+            "apoapsis_altitude": self.orbit.apoapsis_altitude,
+            "periapsis_altitude": self.orbit.periapsis_altitude,
+            "inclination": self.orbit.inclination,
+            "eccentricity": self.orbit.eccentricity,
+        }
+        self.flight_records.append(data)
 
     def launch_sequence(
         self,
@@ -35,6 +56,8 @@ class AutoPilotManager:
         self.target_apoapsis = target_apoapsis
         self.target_orbit_inc = target_orbit_inc
         self.target_orbit_speed = target_orbit_speed
+
+        self.event_manager.record_data("Launch sequence started.", EVENT_IMPORTANT)
 
         # ユニットを初期化
         self.vessel_manager.unit_initiliaze()
@@ -63,21 +86,21 @@ class AutoPilotManager:
         # 軌道データと目標との差を記録
         current_periapsis = self.vessel.orbit.periapsis_altitude
         periapsis_diff = current_periapsis - self.target_periapsis
-        self.event_manager.record_data("Periapsis Difference", f"Periapsis diff: {periapsis_diff} m", 2)
+        self.event_manager.record_data(f"Periapsis Difference: {periapsis_diff} m", EVENT_IMPORTANT)
         time.sleep(1)
 
         current_apoapsis = self.vessel.orbit.apoapsis_altitude
         apoapsis_diff = current_apoapsis - self.target_apoapsis
-        self.event_manager.record_data("Apoapsis Difference", f"Apoapsis diff: {apoapsis_diff} m", 2)
+        self.event_manager.record_data(f"Apoapsis Difference: {apoapsis_diff} m", EVENT_IMPORTANT)
         time.sleep(1)
 
         current_speed = self.vessel.orbit.speed
         speed_diff = current_speed - self.target_orbit_speed
-        self.event_manager.record_data("Speed Difference", f"Speed diff: {speed_diff} m/s", 2)
+        self.event_manager.record_data(f"Speed Difference: {speed_diff} m/s", EVENT_IMPORTANT)
         time.sleep(1)
 
         # 打ち上げ完了とその記録
-        self.event_manager.record_data("Launch", "Launch sequence completed.", 2)
+        self.event_manager.record_data("Launch sequence completed.", EVENT_IMPORTANT)
         self.event_manager.save_records()
         self.event_manager.clear_records()
 
@@ -117,10 +140,12 @@ class AutoPilotManager:
         ascent_autopilot.enabled = True
 
         vessel.control.activate_next_stage()
+        self.event_manager.record_data("Rocket Lift off", EVENT_IMPORTANT)
 
         try:
             while ascent_autopilot.enabled:
                 self.event_manager.update()
+                self.record_data()
                 time.sleep(1)
         finally:
             self.post_ascent_tasks()

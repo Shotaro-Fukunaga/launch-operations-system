@@ -21,7 +21,7 @@ export const LaunchDataViewer = React.memo(() => {
   return (
     <BasicLayout>
       <div className="flex h-full">
-        <div className="w-[20%] h-full flex flex-col ">
+        <div className="w-[15%] h-full flex flex-col ">
           <div className="h-[40%] w-full bg-[#242424]">
             <div>
               <h1>Flight Manager</h1>
@@ -49,7 +49,7 @@ export const LaunchDataViewer = React.memo(() => {
           </div>
         </div>
 
-        <div className="w-[80%] h-full flex flex-wrap">
+        <div className="w-[85%] h-full flex flex-wrap">
           <div className="flex h-[55%] w-full">
             {/* 軌道の表示 */}
             <div className="border border-gray-500 w-[80%] h-full">
@@ -65,25 +65,23 @@ export const LaunchDataViewer = React.memo(() => {
           </div>
 
           <div className="flex h-[45%] w-full border border-gray-500">
-            <div className="w-[60%] h-full flex bg-gray-200">
-              <div className="w-[70%]">
-                <DynamicLineChart
-                  labels={["1", "2", "3", "4", "5", "6", "7", "8"]}
-                  chartTitle="上昇ステータス"
-                  datasetLabel="高度 (m)"
-                  data={[100, 200, 300, 400, 500, 600, 700, 800]}
-                  fillColor="rgba(75, 192, 192, 0.1)"
-                  borderColor="rgba(75, 192, 192, 0.6)"
-                  xGridColor="rgba(255, 99, 132, 0.2)"
-                  yGridColor="rgba(255, 99, 132, 0.2)"
-                />
-              </div>
-              <div className="w-[30%] ">
-                <TerminalLog logs={flightEventRecord?.event_records ?? []} />
-              </div>
+            <div className="w-[40%] h-full flex bg-gray-200">
+              <DynamicLineChart
+                labels={["1", "2", "3", "4", "5", "6", "7", "8"]}
+                chartTitle="上昇ステータス"
+                datasetLabel="高度 (m)"
+                data={[100, 200, 300, 400, 500, 600, 700, 800]}
+                fillColor="rgba(75, 192, 192, 0.1)"
+                borderColor="rgba(75, 192, 192, 0.6)"
+                xGridColor="rgba(255, 99, 132, 0.2)"
+                yGridColor="rgba(255, 99, 132, 0.2)"
+              />
             </div>
             <div className="w-[40%] h-full  flex justify-center">
               <LivePlayer />
+            </div>
+            <div className="w-[20%] h-full">
+              <TerminalLog logs={flightEventRecord?.event_records ?? []} />
             </div>
           </div>
         </div>
