@@ -9,7 +9,7 @@ export interface AtmosphereInfo {
   terminal_velocity: number;
 }
 
-export interface OrbitInfo {
+export interface OrbitInfoType {
   orbital_speed: number;
   apoapsis_altitude: number;
   periapsis_altitude: number;
@@ -66,7 +66,7 @@ export interface DeltaVStatus {
 
 export interface VesselTelemetryType {
   surface_info: SurfaceInfo;
-  orbit_info: OrbitInfo;
+  orbit_info: OrbitInfoType;
   atmosphere_info: AtmosphereInfo;
   delta_v_status: DeltaVStatus;
 }

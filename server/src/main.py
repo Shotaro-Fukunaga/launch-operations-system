@@ -26,6 +26,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# TODO 接続がきれても復帰できるようにする
 krpc_client = KrpcClient("LaunchOperationsAPI")
 vessel_manager = VesselManager(krpc_client.client, rocket_schema_list)
 

@@ -29,32 +29,31 @@ export const FairingStatus: React.FC<Props> = ({
     if (count === 0) return 0;
     return (total / count).toFixed(1);
   };
-  return (
-    <div className="w-full h-full">
-      <div className="bg-gray-600 text-center">
-        <h2 className="font-bold text-[0.6rem]">{title}</h2>
-      </div>
-      <div className="p-[0.4rem] space-y-[0.1rem]">
-        <p>
-          Temp: {calcAverage(fairing1?.temperature, fairing2?.temperature)}
-          °C
-        </p>
-        <p>
-          Max Temp:{" "}
-          {calcAverage(fairing1?.max_temperature, fairing2?.max_temperature)}
-          °C
-        </p>
-        <p>
-          Dyn Press:{" "}
-          {calcAverage(fairing1?.dynamic_pressure, fairing2?.dynamic_pressure)}{" "}
-          Pa
-        </p>
 
-        <StatusLabel
-          status={fairing1?.status}
-          customLabels={{ 3: "Jettisoned" }}
-        />
+  const temp = calcAverage(fairing1?.temperature, fairing2?.temperature);
+  const maxTemp = calcAverage(
+    fairing1?.max_temperature,
+    fairing2?.max_temperature
+  );
+  const dynPress = calcAverage(
+    fairing1?.dynamic_pressure,
+    fairing2?.dynamic_pressure
+  );
+  return (
+    <div className="w-full h-full text-[0.6rem] border border-gray-400">
+      <div className="text-center bg-gray-600">
+        <h2 className="font-bold">{title}</h2>
       </div>
+      <ul className="p-[0.4rem] space-y-[0.1rem]">
+        <li>Temp: {temp} / {maxTemp} °C</li>
+        <li>Dyn Press: {dynPress} Pa</li>
+        <li>
+          <StatusLabel
+            status={fairing1?.status}
+            customLabels={{ 3: "Jettisoned" }}
+          />
+        </li>
+      </ul>
     </div>
   );
 };

@@ -20,8 +20,8 @@ export const FuelTankStatus: React.FC<Props> = ({ title, tankStatus }) => {
     oxidizerCapacity > 0 ? (oxidizerAmount / oxidizerCapacity) * 100 : 0;
 
   return (
-    <div className="w-full h-full text-[0.6rem]">
-      <div className="bg-gray-600  w-full flex justify-center">
+    <div className="w-full h-full text-[0.6rem] border border-gray-400">
+      <div className="flex justify-center w-full bg-gray-600">
         <h2 className="font-bold">{title}</h2>
       </div>
 
@@ -32,7 +32,7 @@ export const FuelTankStatus: React.FC<Props> = ({ title, tankStatus }) => {
         </div>
         <LinearProgress variant="determinate" value={liquidFuelPercentage} />
         <p className="text-right">
-          {liquidFuelAmount}/{liquidFuelCapacity}t
+          {liquidFuelAmount}/{liquidFuelCapacity} t
         </p>
 
         <div className="flex justify-between items-center w-full px-[0.4rem] font-medium">
@@ -42,10 +42,9 @@ export const FuelTankStatus: React.FC<Props> = ({ title, tankStatus }) => {
 
         <LinearProgress variant="determinate" value={oxidizerPercentage} />
         <p className="text-right">
-          {oxidizerAmount}/{oxidizerCapacity}t
+          {oxidizerAmount}/{oxidizerCapacity} t
         </p>
-        <p>Temp : {tankStatus?.temperature ?? 0}</p>
-        <p>Max Temp : {tankStatus?.max_temperature ?? 0}</p>
+        <p>Temp : {tankStatus?.temperature ?? 0} /  {tankStatus?.max_temperature ?? 0} °C</p>
         <StatusLabel status={tankStatus?.status} />
       </div>
     </div>

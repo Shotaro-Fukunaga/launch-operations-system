@@ -1,0 +1,190 @@
+{
+    "flight_id": 111,
+    "records": [
+        {
+            "time": "2024-05-03T08:13:17.027677+00:00",
+            "event_details": "Launch sequence started.",
+            "event_level": 1
+        },
+        {
+            "time": "2024-05-03T08:13:17.072728+00:00",
+            "event_details": "Waiting for launch: 19.061272 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:18.073551+00:00",
+            "event_details": "Waiting for launch: 18.060449 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:19.074544+00:00",
+            "event_details": "Waiting for launch: 17.059456 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:20.075436+00:00",
+            "event_details": "Waiting for launch: 16.058564 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:21.076326+00:00",
+            "event_details": "Waiting for launch: 15.057674 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:22.077236+00:00",
+            "event_details": "Waiting for launch: 14.056764 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:23.078255+00:00",
+            "event_details": "Waiting for launch: 13.055745 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:24.078892+00:00",
+            "event_details": "Waiting for launch: 12.055108 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:25.079697+00:00",
+            "event_details": "Waiting for launch: 11.054303 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:26.080700+00:00",
+            "event_details": "Waiting for launch: 10.0533 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:27.081200+00:00",
+            "event_details": "Waiting for launch: 9.0528 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:28.081722+00:00",
+            "event_details": "Waiting for launch: 8.052278 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:29.082119+00:00",
+            "event_details": "Waiting for launch: 7.051881 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:30.082729+00:00",
+            "event_details": "Waiting for launch: 6.051271 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:31.083474+00:00",
+            "event_details": "Waiting for launch: 5.050526 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:32.084005+00:00",
+            "event_details": "Waiting for launch: 4.049995 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:33.084730+00:00",
+            "event_details": "Waiting for launch: 3.04927 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:34.085326+00:00",
+            "event_details": "Waiting for launch: 2.048674 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:35.085775+00:00",
+            "event_details": "Waiting for launch: 1.048225 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:36.086221+00:00",
+            "event_details": "Waiting for launch: 0.047779 seconds remaining",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:37.673678+00:00",
+            "event_details": "Rocket Lift off",
+            "event_level": 1
+        },
+        {
+            "time": "2024-05-03T08:13:37.723746+00:00",
+            "event_details": "Main engine Ignition",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:13:40.916147+00:00",
+            "event_details": "Launch clamp Cutoff.",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:14:35.356833+00:00",
+            "event_details": "Max Q Passed",
+            "event_level": 1
+        },
+        {
+            "time": "2024-05-03T08:15:21.685888+00:00",
+            "event_details": "Fairing 1 Jettisoned",
+            "event_level": 1
+        },
+        {
+            "time": "2024-05-03T08:15:21.695911+00:00",
+            "event_details": "Fairing 2 Jettisoned",
+            "event_level": 1
+        },
+        {
+            "time": "2024-05-03T08:15:21.697915+00:00",
+            "event_details": "Second engine Ignition",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:15:21.699914+00:00",
+            "event_details": "Decoupler Cutoff.",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:15:21.700911+00:00",
+            "event_details": "Main tank Cutoff.",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:15:21.702914+00:00",
+            "event_details": "MECO main engine cutoff. ",
+            "event_level": 1
+        },
+        {
+            "time": "2024-05-03T08:16:53.023903+00:00",
+            "event_details": "Solar panel 1 Deployed",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:16:53.025416+00:00",
+            "event_details": "Solar panel 2 Deployed",
+            "event_level": 0
+        },
+        {
+            "time": "2024-05-03T08:24:00.199504+00:00",
+            "event_details": "Periapsis Difference: -162.58432834688574 m",
+            "event_level": 1
+        },
+        {
+            "time": "2024-05-03T08:24:01.212691+00:00",
+            "event_details": "Apoapsis Difference: 589.5225069737062 m",
+            "event_level": 1
+        },
+        {
+            "time": "2024-05-03T08:24:02.228647+00:00",
+            "event_details": "Speed Difference: 0.6392724244633428 m/s",
+            "event_level": 1
+        },
+        {
+            "time": "2024-05-03T08:24:03.229516+00:00",
+            "event_details": "Launch sequence completed.",
+            "event_level": 1
+        }
+    ]
+}

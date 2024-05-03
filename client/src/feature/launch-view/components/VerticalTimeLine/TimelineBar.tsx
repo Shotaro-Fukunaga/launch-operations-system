@@ -1,107 +1,114 @@
-import { useState, useEffect, FC, useRef } from "react";
-import MarkerGenerator from "./MarkerGenerator";
-import { EventMarkerGenerator } from "./EventMarkerGenerator";
-import { Countdown } from "./Countdown";
-import { EventRecord } from "../../../../types/flightRecordType";
+import { useState, useEffect, FC } from "react";
 
-// 現在時刻の位置を計算
-const calculateCurrentTimePosition = () => {
-  const now = new Date();
-  const secondsSinceMidnight =
-    now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-  return (secondsSinceMidnight / (24 * 3600)) * 100;
-};
 
-type Props = {
-  events?: EventRecord[];
-};
 
-export const TimelineBar: FC<Props> = ({ events }) => {
-  const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true); // 自動スクロールが有効かどうかを追跡
-  const [currentTimePosition, setCurrentTimePosition] = useState(
-    calculateCurrentTimePosition()
-  );
+function generateTimeline(
+  launchTime: Date,
+  launchCompleteTime: Date,
+  startTime: Date
+) {
+  // startTimeからlaunchTimeまでの秒数（通常は負の値）
+  const startOffsetSeconds =
+    (startTime.getTime() - launchTime.getTime()) / 1000;
+  // launchTimeからlaunchCompleteTimeまでの秒数
+  const totalLaunchDuration =
+    (launchCompleteTime.getTime() - launchTime.getTime()) / 1000;
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const userScrollActivityRef = useRef(false);
+  // 総秒数の計算: startOffsetSecondsの絶対値 + launchTimeからlaunchCompleteTimeまでの秒数
+  const totalDuration = Math.abs(startOffsetSeconds) + totalLaunchDuration;
 
-  // スクロールイベントハンドラー
-  const handleUserScroll = () => {
-    userScrollActivityRef.current = true; // ユーザーによるスクロール操作を検出
-    setIsAutoScrollEnabled(false); // 自動スクロールを無効化
-  };
+  // 時間差に基づいて配列を生成
+  const timelineArray = Array.from(
+    { length: totalDuration + 1 },
+    (_, index) => {
+      const secondsFromStart = startOffsetSeconds + index; // startTimeからの経過秒数（負の値からスタート）
+      const currentTime = new Date(startTime.getTime() + index * 1000);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTimePosition(calculateCurrentTimePosition());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+      // 時間の表示フォーマット
+      const formatTime = (time: number) => {
+        const prefix = time < 0 ? "x - " : "x + ";
+        const absTime = Math.abs(time);
+        const hours = Math.floor(absTime / 3600);
+        const minutes = Math.floor((absTime % 3600) / 60);
+        const seconds = absTime % 60;
+        return `${prefix}${hours.toString().padStart(2, "0")}:${minutes
+          .toString()
+          .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+      };
 
-  // スクロールコンテナにイベントリスナーを追加
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (container) {
-      container.addEventListener("scroll", handleUserScroll);
+      // 日付と時間の表示をISO 8601形式で
+      const formatDate = (date: Date) => {
+        const isoString = date.toISOString(); // ISO 8601形式の文字列を取得
+        const formattedDate =
+          isoString.replace("T", " ").slice(0, 19) + "+00:00"; // "T"を空白に置換し、秒までを表示しタイムゾーンを追加
+        return formattedDate;
+      };
 
-      return () => {
-        container.removeEventListener("scroll", handleUserScroll);
+      return {
+        x: formatTime(secondsFromStart),
+        utc: formatDate(currentTime),
+        jst: currentTime.toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" }),
       };
     }
-  }, []);
+  );
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (!userScrollActivityRef.current) {
-        // ユーザーのスクロール操作がなければ自動スクロール
-        setIsAutoScrollEnabled(true);
-        const newPosition = calculateCurrentTimePosition();
-        setCurrentTimePosition(newPosition);
+  return timelineArray;
+}
 
-        if (isAutoScrollEnabled && scrollContainerRef.current) {
-          const container = scrollContainerRef.current;
-          const scrollHeight = container.scrollHeight;
-          const height = container.clientHeight;
-          const scrollPosition = (newPosition / 100) * scrollHeight;
 
-          container.scrollTop = scrollPosition - height / 2;
-        }
-      }
-      userScrollActivityRef.current = false; // ユーザー操作フラグをリセット
-    }, 1000);
+const data = [
+  { x: "x - 00:00:05", utc: "2024-05-03 01:59:55+00:00", jst: "2024/5/3 10:59:55" },
+  { x: "x - 00:00:04", utc: "2024-05-03 01:59:56+00:00", jst: "2024/5/3 10:59:56" },
+  { x: "x - 00:00:03", utc: "2024-05-03 01:59:57+00:00", jst: "2024/5/3 10:59:57" },
+  { x: "x - 00:00:02", utc: "2024-05-03 01:59:58+00:00", jst: "2024/5/3 10:59:58" },
+  { x: "x - 00:00:01", utc: "2024-05-03 01:59:59+00:00", jst: "2024/5/3 10:59:59" },
+  { x: "x + 00:00:00", utc: "2024-05-03 02:00:00+00:00", jst: "2024/5/3 11:00:00" },
+  { x: "x + 00:00:01", utc: "2024-05-03 02:00:01+00:00", jst: "2024/5/3 11:00:01" },
+  { x: "x + 00:00:02", utc: "2024-05-03 02:00:02+00:00", jst: "2024/5/3 11:00:02" },
+  { x: "x + 00:00:03", utc: "2024-05-03 02:00:03+00:00", jst: "2024/5/3 11:00:03" },
+  { x: "x + 00:00:04", utc: "2024-05-03 02:00:04+00:00", jst: "2024/5/3 11:00:04" },
+  { x: "x + 00:00:05", utc: "2024-05-03 02:00:05+00:00", jst: "2024/5/3 11:00:05" },
+];
 
-    return () => clearInterval(timer);
-  }, [isAutoScrollEnabled]);
+
+export const TimelineBar: FC = () => {
+  const markers = data.map((item, index) => (
+    <div
+      key={index}
+      className="absolute bg-blue-500"
+      style={{
+        height: "2px",
+        width: "4.6rem",
+        bottom: `${((data.length - 1 - index) / (data.length - 1)) * 100}%`,
+        right: "100%",
+      }}
+    >
+      <span className="text-xs text-white">{item.x}</span>
+    </div>
+  ));
 
   return (
     <div className="h-full w-full relative">
-      <div className="w-full absolute flex justify-end px-[1rem] z-[1000]">
-        <div className="w-[70%] text-white text-[0.8rem] bg-black bg-opacity-40">
-          {/* TODO リフトオフ時間 */}
-          <Countdown launchDateTime={new Date(2024, 2, 16, 17, 0, 0)} />
+      <div className="overflow-auto h-full w-full pl-[12rem]" style={{ scrollbarWidth: 'none' }}>
+        {/* スタイルシートを用いてスクロールバーを非表示にする */}
+        <style>
+          {`
+            .overflow-auto::-webkit-scrollbar {
+              display: none; /* Chrome, Safari, Opera */
+            }
+            .overflow-auto {
+              -ms-overflow-style: none; /* IE and Edge */
+              scrollbar-width: none; /* Firefox */
+            }
+          `}
+        </style>
+        <div className="relative h-full">
+          {markers}
         </div>
       </div>
-      <div
-        className="overflow-auto overflow-x-hidden h-full w-full pl-[4rem]"
-        ref={scrollContainerRef}
-      >
-        {/* スクロールするマーカーと現在時刻のポジションを表示するコンテナ */}
-        <div className="relative h-[1500rem]">
-          <MarkerGenerator />
-
-          {/* ロケットのイベントマーカー */}
-          <EventMarkerGenerator events={events} />
-
-          <div
-            className="transition-height duration-500 absolute w-1 bg-white rounded-full"
-            style={{ height: `${currentTimePosition}%`, zIndex: 3 }}
-          />
-        </div>
-      </div>
-      {/* グレーの背景ライン */}
       <div
         className="absolute h-full w-1 bg-gray-600"
-        style={{ top: 0, left: "4rem" }}
+        style={{ top: 0, left: "12rem" }}
       />
     </div>
   );

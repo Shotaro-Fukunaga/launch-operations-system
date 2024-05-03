@@ -1,13 +1,13 @@
 
 
 # fastapi uvicornサーバーを起動する
-.PHONY: run-server
-run-server:
+.PHONY: run
+run:
 	cd server && uvicorn src.main:app --reload
 
 # Run npm dev in client
-.PHONY: run-client
-run-client:
+.PHONY: rc
+rc:
 	cd client && npm run dev
 
 # Run node index.js in live_server

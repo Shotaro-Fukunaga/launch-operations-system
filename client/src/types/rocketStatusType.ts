@@ -1,33 +1,33 @@
-interface AntennaStatus {
-  status: string;
+export interface AntennaStatus {
+  status: number;
   power: number;
   packet_interval: number;
   packet_size: number;
   packet_resource_cost: number;
 }
 
-interface SolarPanelStatus {
-  status: string;
+export interface SolarPanelStatus {
+  status: number;
   energy_flow: number;
   sun_exposure: number;
 }
 
-interface ReactionWheelStatus {
-  status: string;
+export interface ReactionWheelStatus {
+  status: number;
   active: boolean;
   available_torque: [number, number, number]; // Tuple for pitch, yaw, roll
   max_torque: [number, number, number];
 }
 
-interface FairingStatus {
-  status: string;
+export interface FairingStatusType {
+  status: number;
   dynamic_pressure: number;
   temperature: number;
   max_temperature: number;
 }
 
 export interface EngineStatus {
-  status: string;
+  status: number;
   start_mass: number;
   end_mass: number;
   burned_mass: number;
@@ -50,13 +50,14 @@ interface ResourceStatus {
 }
 
 export interface TankStatus {
+  status: number;
   temperature: number;
   max_temperature: number;
   fuel?: ResourceStatus;
   lqd_oxygen?: ResourceStatus;
 }
 
-interface CommunicationStatus {
+export interface CommunicationStatus {
   can_communicate: boolean;
   can_transmit_science: boolean;
   signal_strength: number;
@@ -68,8 +69,8 @@ interface CommunicationStatus {
   }>;
 }
 
-interface SatelliteBusStatus extends CommunicationStatus {
-  status: string;
+export interface SatelliteBusStatusType extends CommunicationStatus {
+  status: number;
   shielded: boolean;
   current_charge: number;
   max_charge: number;
@@ -77,8 +78,8 @@ interface SatelliteBusStatus extends CommunicationStatus {
 
 export interface RocketStatusType {
   antenna: AntennaStatus;
-  fairing_1: FairingStatus;
-  fairing_2: FairingStatus;
+  fairing_1: FairingStatusType;
+  fairing_2: FairingStatusType;
   main_tank: TankStatus;
   second_tank: TankStatus;
   main_engine: EngineStatus;
@@ -86,5 +87,5 @@ export interface RocketStatusType {
   solar_panel_1: SolarPanelStatus;
   solar_panel_2: SolarPanelStatus;
   reaction_wheel: ReactionWheelStatus;
-  satellite_bus: SatelliteBusStatus;
+  satellite_bus: SatelliteBusStatusType;
 }

@@ -1,60 +1,39 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { EventRecord } from "../../types/flightRecordType";
 
 interface TerminalLogProps {
-  logs: EventRecord[];
+  logs?: EventRecord[]; // logs は undefined を許容する
 }
 
 const TerminalLog: React.FC<TerminalLogProps> = ({ logs }) => {
-  const [showTime, setShowTime] = useState(true);
   const endOfLogsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // logsが更新されるたびに最新のログにスクロールする
     if (endOfLogsRef.current) {
       endOfLogsRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [logs]);
 
-  const renderLog = (log: EventRecord, index: number) => {
-    let color;
-    let logType = "info"; // デフォルトはinfoとする
-
-    switch (log.event_level) {
-      case 2: // エラーレコード
-        color = "text-red-500";
-        logType = "error";
-        break;
-      case 1: // 重要なレコード
-        color = "text-green-500";
-        logType = "info";
-        break;
-      default: // 通常のレコード
-        color = "text-white";
+  const renderContent = () => {
+    if (!logs || logs.length === 0) {
+      return (
+        <div className="text-white text-[0.8rem]">Terminal Standby ...</div>
+      );
     }
-
-    const date = new Date(log.time);
-    const formattedDate = date.toLocaleDateString("ja-JP"); // "yyyy/mm/dd" 形式
-
-    return (
-      <div key={index} className={`${color}`}>
-        {showTime ? `` : formattedDate} [{logType.toUpperCase()}] -{" "}
-        {log.event_details}
+    return logs.map((log, index) => (
+      <div key={index} className="text-white text-[0.8rem]">
+        {/* TODO x + 00:00:00のように変更する */}- {log.event_details}
       </div>
-    );
+    ));
   };
 
   return (
-    <div className="w-full h-full bg-black relative pl-[0.6rem] py-[0.4rem]">
-      <button
-        onClick={() => setShowTime(!showTime)}
-        className="p-2 text-[0.6rem] text-white bg-gray-800 hover:bg-gray-600 absolute flex justify-end right-6 top-2 z-10"
-      >
-        {showTime ? "Hide Time" : "Show Time"}
-      </button>
-
-      <div className="h-full w-full overflow-y-auto">
-        {logs.map(renderLog)}
+    <div className="w-full h-full relative shadow-md">
+      <div className="h-[8%] text-white text-[1rem] w-full bg-gray-600 shadow-md flex justify-center">
+        Flight Event Log
+      </div>
+      <div className="h-[92%] w-full overflow-y-auto pl-[0.6rem] py-[0.4rem]">
+        {renderContent()}
         <div ref={endOfLogsRef} />
       </div>
     </div>
