@@ -32,6 +32,7 @@ export interface EngineStatus {
   end_mass: number;
   burned_mass: number;
   max_thrust: number;
+  max_vacuum_thrust: number;
   twr: number;
   slt: number;
   isp: number;
