@@ -20,3 +20,17 @@ class LaunchParameters(BaseModel):
         if value is not None:
             assert 0 <= value <= 180, "Inclination must be between 0 and 180 degrees"
         return value
+
+
+from typing import Optional
+
+class TargetOrbit(BaseModel):
+    periapsis: int
+    apoapsis: int
+    inclination: float
+    speed: int
+
+class LaunchCommand(BaseModel):
+    launch_date: datetime
+    command: str
+    target_orbit: Optional[TargetOrbit]

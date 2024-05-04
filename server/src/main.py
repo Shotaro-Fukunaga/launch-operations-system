@@ -2,13 +2,13 @@ import logging
 from http.client import HTTPException
 from fastapi import FastAPI, WebSocket, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from src.model import LaunchParameters
-from src.utils.krpc_module.krpc_client import KrpcClient
-from src.utils.krpc_module.vessel_manager import VesselManager
-from src.settings.config import FLIGHT_PLANS, rocket_schema_list
-from src.utils.websocket_handler import common_websocket_handler
-from src.utils.krpc_module.auto_pilot_manager import AutoPilotManager
-
+from src.model import  LaunchCommand
+import asyncio
+from fastapi import WebSocket, WebSocket, WebSocketDisconnect
+import json
+from src.settings.config import FLIGHT_PLANS
+from src.utils.krpc_module.auto_pilot_manager import FlightManager
+import requests
 # ロギングの基本設定
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("launch_operations_api")
@@ -26,9 +26,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# TODO 接続がきれても復帰できるようにする
-krpc_client = KrpcClient("LaunchOperationsAPI")
-vessel_manager = VesselManager(krpc_client.client, rocket_schema_list)
 
 
 @app.get("/flight-plans")
@@ -38,54 +35,55 @@ def read_flight_plans():
     return FLIGHT_PLANS.get("flight_plans", [])
 
 
-@app.post("/start-launch-sequence")
-def start_launch_sequence(body: LaunchParameters):
-    if not krpc_client.is_connected:
-        raise HTTPException(status_code=503, detail="KRPC server is not connected.")
-    auto_pilot = AutoPilotManager(vessel_manager)
-    return auto_pilot.launch_sequence(**body.model_dump())
 
 
-@app.get("/get-vessel-telemetry")
-def get_telemetry():
-    if not krpc_client.is_connected:
-        raise HTTPException(status_code=503, detail="KRPC server is not connected.")
-    return vessel_manager.get_vessel_telemetry()
+@app.websocket("/ws/launch-management")
+async def websocket_launch_management(websocket: WebSocket):
+    auto_pilot = FlightManager()
 
+    await websocket.accept()
 
-@app.get("/get-rocket-status")
-def get_rocket_status():
-    if not krpc_client.is_connected:
-        raise HTTPException(status_code=503, detail="KRPC server is not connected.")
-    return vessel_manager.get_rocket_status()
+    async def send_telemetry():
+        try:
+            while True:
+                await websocket.send_json(auto_pilot.get_telemetry())
+                await asyncio.sleep(0.4)
+        except asyncio.CancelledError:
+            # タスクがキャンセルされた場合はループを終了
+            pass
+        except WebSocketDisconnect:
+            # WebSocket接続がクライアントによって閉じられた場合
+            pass
 
+    telemetry_task = asyncio.create_task(send_telemetry())
 
-@app.get("/get-flight-records")
-def get_flight_records():
-    if not krpc_client.is_connected:
-        raise HTTPException(status_code=503, detail="KRPC server is not connected.")
-    return vessel_manager.get_flight_records()
+    try:
+        while True:
+            message = await websocket.receive_text()
+            data = json.loads(message)  # JSON文字列をPythonの辞書に変換
+            command_data = LaunchCommand.model_validate(data)  # Pydanticモデルに変換
 
+            if command_data.command == "disconnect":
+                logging.info("Disconnect command received, stopping telemetry and closing connection.")
+                break  # ループから抜けてクローズ処理へ
 
-@app.websocket("/ws/vessel-telemetry")
-async def websocket_vessel_telemetry(websocket: WebSocket):
-    if not krpc_client.is_connected:
-        await websocket.close(code=1011, reason="KRPC server is not connected.")
-        return
-    await common_websocket_handler(websocket, vessel_manager.get_vessel_telemetry)
-
-
-@app.websocket("/ws/rocket-status")
-async def websocket_rocket_status(websocket: WebSocket):
-    if not krpc_client.is_connected:
-        await websocket.close(code=1011, reason="KRPC server is not connected.")
-        return
-    await common_websocket_handler(websocket, vessel_manager.get_rocket_status)
-
-
-@app.websocket("/ws/flight-records")
-async def websocket_flight_records(websocket: WebSocket):
-    if not krpc_client.is_connected:
-        await websocket.close(code=1011, reason="KRPC server is not connected.")
-        return
-    await common_websocket_handler(websocket, vessel_manager.get_flight_records)
+            elif command_data.command == "sequence":
+                logging.info(f"Received command: {command_data.target_orbit}")
+                auto_pilot.sequence_start(
+                    command_data.launch_date,
+                    command_data.target_orbit.periapsis,
+                    command_data.target_orbit.apoapsis,
+                    command_data.target_orbit.inclination,
+                    command_data.target_orbit.speed,
+                )
+    except WebSocketDisconnect:
+        logging.info("WebSocket connection has been closed by the client.")
+    except asyncio.CancelledError:
+        logging.info("WebSocket task was cancelled")
+    except Exception as e:
+        logging.error(f"An unexpected error occurred: {str(e)}")
+    finally:
+        telemetry_task.cancel()  # テレメトリ送信タスクをキャンセル
+        await telemetry_task
+        await websocket.close(code=1011, reason="Unexpected error occurred")
+        logger.info("WebSocket connection closed")

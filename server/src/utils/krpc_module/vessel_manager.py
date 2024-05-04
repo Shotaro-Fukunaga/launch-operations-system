@@ -1,5 +1,4 @@
 from src.utils.krpc_module.part_unit import PartUnit
-from src.utils.krpc_module.telemetry_manager import TelemetryManager
 from krpc.services import Client
 
 
@@ -11,25 +10,16 @@ class VesselManager:
         self.orbit = self.vessel.orbit
         self.reference_frame = self.vessel.orbit.body.reference_frame
         self.flight_info = self.vessel.flight(self.reference_frame)
-        self.telemetry_manager = TelemetryManager(self)
         self.rocket_schema_list = rocket_schema_list
-        self.flight_records = []
-        self.event_records = []
         self.unit_initiliaze()
 
     def unit_initiliaze(self) -> None:
         self.units: dict[str, PartUnit] = {config["tag"]: PartUnit(vessel=self.vessel, config=config) for config in self.rocket_schema_list}
 
-    def get_vessel_telemetry(self):
-        """TelemetryManager を通じてテレメトリ情報を取得する"""
-        return self.telemetry_manager.get_vessel_telemetry()
-
-    def get_rocket_status(self):
-        """TelemetryManager を通じてロケットのステータスを取得する"""
-        return self.telemetry_manager.get_rocket_status()
-
-    def get_flight_records(self) -> list[dict]:
-        return {"flight_records": self.flight_records, "event_records": self.event_records}
+    def set_all_units_status(self, status: int) -> None:
+        # unitsディクショナリ内の全PartUnitのstatusを更新
+        for unit in self.units.values():
+            unit.status = status
 
 
     def get_units_by_part_type(self, part_type) -> list[PartUnit]:

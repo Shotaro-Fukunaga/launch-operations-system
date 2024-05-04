@@ -12,7 +12,6 @@ export interface FlightRecord {
 }
 
 export interface EventRecord {
-  x: string;
   time: string;
   event_type: string;
   event_details: string;

@@ -9,8 +9,8 @@ class PartUnit:
         
         
         STANDBY : 0
-        ACTIVE : 1 
-        DEPLOYED : 2
+        GREEN : 1 
+        ACTIVE : 2
         CUTOFF : 3
         """
         self.vessel: Vessel = vessel

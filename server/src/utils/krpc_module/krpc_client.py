@@ -8,7 +8,7 @@ class KrpcClient:
         self.client = None
         self.is_initialized = False
         self.is_connected = False  # 接続状態を追跡
-        self.max_retries = 24  # 24回リトライする
+        self.max_retries = 10 # 最大再接続回数
         self.retry_interval = 3  # seconds
         self.initialize(connection_name)
 

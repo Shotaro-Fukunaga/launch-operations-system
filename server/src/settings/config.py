@@ -15,9 +15,9 @@ ROCKET_SCHEMAS = open_json("src/settings/rocket_schema.json")
 rocket_schema_list = ROCKET_SCHEMAS.get("rocket_schemas", [])
 
 # パーツのステータスコードの定義
-STANDBY = 0  # 待機中
-ACTIVE = 1  # アクティブ
-DEPLOYED = 2 # デプロイ
+WAIT = 0  # 待機中
+GO = 1 # 準備完了
+ACTIVE = 2 # 動作中
 CUTOFF = 3  # カットオフ
 
 
