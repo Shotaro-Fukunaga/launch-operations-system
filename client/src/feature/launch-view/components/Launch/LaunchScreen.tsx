@@ -13,7 +13,7 @@ type Props = {
 
 const LaunchScreen: FC<Props> = ({ orbitInfo,launchRelativeTime,sendCommand }) => {
   const launchTime = new Date();
-  launchTime.setMinutes(launchTime.getMinutes() + 1);
+  launchTime.setSeconds(launchTime.getSeconds() + 15);
   const handleLaunchClick = () => {
     const command = {
       launch_date: launchTime,

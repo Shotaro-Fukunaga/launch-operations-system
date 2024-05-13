@@ -1,5 +1,6 @@
 export interface FlightRecord {
   time: string;
+  launch_relative_time:number;
   heading: number;
   altitude: number;
   latitude: number;
@@ -13,9 +14,8 @@ export interface FlightRecord {
 
 export interface EventRecord {
   time: string;
-  event_type: string;
-  event_details: string;
-  event_level: number;
+  level: string;
+  msg: string;
 }
 
 export interface FlightEventRecord {

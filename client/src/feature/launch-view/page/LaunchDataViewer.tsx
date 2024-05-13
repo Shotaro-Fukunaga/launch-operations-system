@@ -25,7 +25,6 @@ interface TelemetryData {
 export const LaunchDataViewer = React.memo(() => {
   const [webSocket, setWebSocket] = useState<WebSocket | null>(null);
   const [telemetryData, setTelemetryData] = useState<TelemetryData>({});
-  const [error, setError] = useState<string>("");
 
   useEffect(() => {
     // WebSocket 接続を開設
@@ -39,11 +38,9 @@ export const LaunchDataViewer = React.memo(() => {
         setTelemetryData(data);
       } catch (err) {
         console.error("Error parsing data", err);
-        setError("Error parsing data");
       }
     };
     ws.onerror = (event: Event) => {
-      setError("WebSocket error");
       console.error("WebSocket Error", event);
     };
     ws.onclose = () => {
@@ -68,8 +65,6 @@ export const LaunchDataViewer = React.memo(() => {
   const eventRecord = telemetryData.event_records;
   const vesselTm = telemetryData.vessel_telemetry;
   const rocketStatus = telemetryData.rocket_status;
-
-  console.log(telemetryData)
 
   return (
     <BasicLayout>

@@ -32,7 +32,7 @@ export const RocketEngineStatus: React.FC<Props> = ({
         <li>
           <StatusLabel
             status={engineStatus?.status}
-            customLabels={{ 1: "Burning" }}
+            customLabels={{ 2: "Burning" }}
           />
         </li>
       </ul>
