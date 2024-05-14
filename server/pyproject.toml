@@ -1,2 +1,39 @@
-[tool.black]
-line-length = 160 
+[tool.ruff]
+# コードの最大行長を140文字に設定
+line-length = 140
+# チェックするリントルールを指定
+select = ["ALL"]
+# 自動修正可能なルールを指定
+fixable = ["ALL"]
+
+# チェック対象から除外するエラーコードを指定
+ignore = ["INP001","D415","D400","D406", "D407", "D413"]
+# チェック対象のファイルパターンを指定
+include = ["src/**/*.py"]
+# チェック対象から除外するファイルパターンを指定
+# exclude = ["src/database/*.py"]
+
+# [tool.poetry]
+# name = "clinicdoc_api"
+# version = "0.1.0"
+# description = "A Clinic Doc API"
+# authors = ["Your Name <you@example.com>"]
+
+# [tool.poetry.dependencies]
+# python = "^3.12"
+# uvicorn = "^0.29.0"
+# fastapi = "^0.111.0"
+# sqlalchemy = "^2.0.30"
+# psycopg2-binary = "^2.9.9"
+# asyncpg = "^0.29.0"
+# alembic = "^1.13.1"
+
+# [tool.poetry.dev-dependencies]
+# pytest = "^6.2"
+
+# [tool.poetry.scripts]
+# start = "uvicorn: main.app"
+
+# [build-system]
+# requires = ["poetry-core>=1.0.0"]
+# build-backend = "poetry.core.masonry.api"
