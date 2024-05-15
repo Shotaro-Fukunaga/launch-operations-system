@@ -1,12 +1,19 @@
-import krpc
 import logging
 import threading
 import time
-from krpc.error import RPCError, ConnectionError
+from typing import Any, Callable
+
+import krpc
+from krpc.error import ConnectionError, RPCError
+
+logger = logging.getLogger(__name__)
 
 
 class KrpcClient:
-    def __init__(self, connection_name, check_interval=5):
+    """KRPCクライアントを管理するクラス"""
+
+    def __init__(self: "KrpcClient", connection_name: str, check_interval: int = 5) -> None:
+        """Initialize the KrpcClient class."""
         self.connection_name = connection_name
         self.client = None
         self.is_connected = False  # 接続状態を追跡
@@ -15,85 +22,97 @@ class KrpcClient:
         self.monitor_thread = threading.Thread(target=self.monitor_connection, daemon=True)
         self.monitor_thread.start()
 
-    def initialize(self, connection_name):
+    def initialize(self: "KrpcClient", connection_name: str) -> None:
+        """KRPCクライアントを初期化するメソッド"""
         self.close_existing_client()  # 既存のクライアントを閉じる
         try:
             self.client = krpc.connect(name=connection_name)
             self.is_connected = True  # 接続成功を記録
-            logging.info("KRPC connected successfully.")
-        except Exception as e:
+            logger.info("KRPC connected successfully.")
+        except Exception:
             self.is_connected = False  # 接続失敗を記録
-            logging.error(f"Initialization failed: {e}")
-            raise Exception("Failed to initialize Core.") from e
+            logger.exception("Initialization failed")
+            raise
 
     @property
-    def connection_status(self):
+    def connection_status(self: "KrpcClient") -> bool:
         """接続状態を返すプロパティ"""
         return self.is_connected
 
-    def reconnect(self):
+    def reconnect(self: "KrpcClient") -> None:
         """再接続を試みるメソッド"""
-        logging.info("Attempting to reconnect to KRPC...")
+        logger.info("Attempting to reconnect to KRPC...")
         self.initialize(self.connection_name)
 
-    def close_existing_client(self):
+    def close_existing_client(self: "KrpcClient") -> None:
         """既存のクライアントを閉じるメソッド"""
         if self.client is not None:
             try:
                 self.client.close()
-                logging.info("Existing KRPC client closed.")
-            except Exception as e:
-                logging.warning(f"Failed to close existing client: {e}")
+                logger.info("Existing KRPC client closed.")
+            except (RPCError, ConnectionError) as e:
+                logger.warning("Failed to close existing client %s", e)
             finally:
                 self.client = None
 
-    def disconnect(self):
+    def disconnect(self: "KrpcClient") -> None:
         """接続を閉じるメソッド"""
         if self.client:
             self.client.close()
             self.is_connected = False
-            logging.info("KRPC connection closed successfully.")
+            logger.info("KRPC connection closed successfully.")
 
-    def monitor_connection(self):
+    def monitor_connection(self: "KrpcClient") -> None:
         """接続状態を定期的にチェックするメソッド"""
         while True:
             try:
                 # 接続状態をチェックする簡単なRPCを実行
                 if self.is_connected:
-                    self.client.space_center.active_vessel
+                    if self.client and hasattr(self.client, "space_center") and self.client.space_center:
+                        _ = self.client.space_center.active_vessel
+                    else:
+                        logger.warning("Space Center is not available.")
+                        self.is_connected = False
+                        self.reconnect()
                 else:
                     self.reconnect()
             except (RPCError, ConnectionError) as e:
-                logging.warning(f"Connection lost: {e}. Attempting to reconnect...")
+                logger.warning("Connection lost: %s. Attempting to reconnect...", e)
                 self.is_connected = False
                 self.reconnect()
-            except Exception as e:
-                logging.error(f"Unexpected error: {e}")
+            except Exception:
+                logger.exception("Unexpected error")
             time.sleep(self.check_interval)
 
-    def execute_with_reconnect(self, function, *args, **kwargs):
-        """
-        指定された関数を再接続を試みながら実行する
-        :param function: 実行する関数
-        :param args: 関数に渡す引数
-        :param kwargs: 関数に渡すキーワード引数
-        :return: 関数の戻り値
+    def execute_with_reconnect(self: "KrpcClient", function: Callable[..., Any], *args: Any, **kwargs: Any) -> Any | None:  # noqa: ANN401
+        """接続が失われた場合に再接続を試みながら指定された関数を実行する
+
+        Args:
+            function (Callable[..., Any]): 実行する関数
+            *args (Any): 関数に渡す位置引数
+            **kwargs (Any): 関数に渡すキーワード引数
+
+        Returns:
+            Any | None: 実行された関数の戻り値。または、ゲームシーンが「flight」でない場合、
+                        または関数が実行できなかった場合はNoneを返す
         """
         try:
             if not self.is_connected:
                 self.reconnect()
 
             # ゲームシーンをチェック
-            scene = self.client.krpc.current_game_scene
-            if scene == "flight":
-                return function(*args, **kwargs)
+            if self.client and hasattr(self.client, "krpc") and self.client.krpc:
+                scene = self.client.krpc.current_game_scene
+                if scene == "flight":
+                    return function(*args, **kwargs)
+                logger.warning("Function %s not executed: Invalid game scene '%s'.", function.__name__, scene)
             else:
-                logging.warning(f"Function {function.__name__} not executed: Invalid game scene '{scene}'.")
-                return None
-        except RPCError as e:
-            logging.error(f"RPCError occurred: {e}, attempting to reconnect...")
+                logger.warning("KRPC client is not available.")
+            return None
+        except RPCError:
+            logger.exception("RPCError occurred: attempting to reconnect...")
             self.reconnect()
             return function(*args, **kwargs)
-        except Exception as e:
-            logging.error(f"Unexpected error: {e}")
+        except Exception:
+            logger.exception("Unexpected error")
             raise
