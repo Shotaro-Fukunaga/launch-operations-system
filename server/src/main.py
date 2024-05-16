@@ -8,7 +8,6 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.model import LaunchCommand
-from src.settings.config import FLIGHT_LOG_FILE_PATH
 from src.utils.krpc_module.auto_pilot_manager import FlightManager
 from src.utils.krpc_module.krpc_client import KrpcClient
 
@@ -34,10 +33,9 @@ async def websocket_launch_management(websocket: WebSocket) -> None:
 
     telemetry_task = asyncio.create_task(send_telemetry(websocket, auto_pilot))
     commands_task = asyncio.create_task(receive_commands(websocket, auto_pilot))
-    record_task = asyncio.create_task(record_flight_data(auto_pilot))
 
     done, pending = await asyncio.wait(
-        [telemetry_task, commands_task, record_task],
+        [telemetry_task, commands_task],
         return_when=asyncio.FIRST_COMPLETED,
     )
 
@@ -47,6 +45,9 @@ async def websocket_launch_management(websocket: WebSocket) -> None:
             await task
         except asyncio.CancelledError:
             logger.info("Cancelled pending task")
+
+        # Clean up the FlightManager instance
+    await auto_pilot.close()
 
 
 async def send_telemetry(websocket: WebSocket, auto_pilot: FlightManager) -> None:
@@ -90,31 +91,4 @@ async def execute_command(command_data: LaunchCommand, auto_pilot: FlightManager
     """Execute a received command based on the command type."""
     if command_data.command == "sequence":
         logger.info("Received sequence command for: %s", command_data.launch_date)
-        await auto_pilot.sequence_start(
-            command_data.launch_date,
-            command_data.target_orbit.periapsis,
-            command_data.target_orbit.apoapsis,
-            command_data.target_orbit.inclination,
-            command_data.target_orbit.speed,
-        )
-
-
-async def record_flight_data(auto_pilot: FlightManager) -> None:
-    """Periodically record flight data to a file."""
-    try:
-        await auto_pilot.record_flight_data_periodically(FLIGHT_LOG_FILE_PATH, 100)
-    except Exception:
-        logger.exception("Error recording flight data")
-        raise
-
-
-# @app.get("/flight-plans")
-# async def read_flight_plans() -> dict[str, str]:
-#     """Get all flight plans and event plans stored in the server"""
-#     return await get_logs(FLIGHT_LOG_FILE_PATH)
-
-
-# @app.get("/check-connection")
-# async def check_connection():
-#     """Check if the server is connected to KSP"""
-#     return {"is_connected": krpc.is_connected}
+        await auto_pilot.sequence_start(command_data)

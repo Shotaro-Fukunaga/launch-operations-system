@@ -2,8 +2,6 @@ from datetime import datetime, timedelta, timezone
 
 from src.utils.commons.read_json import read_json
 
-FLIGHT_PLANS = read_json("src/settings/flight_plans.json")
-
 # KSPロケットの構造を設定したスキーマJSONファイルのパス
 ROCKET_SCHEMAS = read_json("src/settings/rocket_schema.json").get("rocket_schemas", [])
 
@@ -15,5 +13,4 @@ CUTOFF = 3  # カットオフ
 
 
 # ログファイルのパス
-LOG_FILE_PATH = f"./src/logs/{datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d')}-los-system.log"
 FLIGHT_LOG_FILE_PATH = f"./src/logs/{datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d')}-los-flight.log"
