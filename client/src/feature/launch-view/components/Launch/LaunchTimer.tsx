@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 type LaunchTimerProps = {
-  launchTime: Date; // launchTime を Date 型で受け取る
+  launchTime: Date;
+  launchRelativeTime?: number;
 };
 
-const LaunchTimer: React.FC<LaunchTimerProps> = ({ launchTime }) => {
+const LaunchTimer: React.FC<LaunchTimerProps> = ({
+  launchTime,
+  launchRelativeTime,
+}) => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -15,30 +19,42 @@ const LaunchTimer: React.FC<LaunchTimerProps> = ({ launchTime }) => {
     return () => clearInterval(timerId); // コンポーネントのクリーンアップ
   }, []);
 
-  const getTimeDiff = (launchTime: Date, currentTime: Date) => {
-    const diff = launchTime.getTime() - currentTime.getTime();
-    const sign = diff < 0 ? '+' : '-';
-    let seconds = Math.abs(diff) / 1000;
-    const hours = Math.floor(seconds / 3600);
-    seconds = seconds % 3600;
-    const minutes = Math.floor(seconds / 60);
-    seconds = Math.floor(seconds % 60);
-    return `X ${sign} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  const formatRelativeTime = (relativeTime: number | undefined) => {
+    if (relativeTime === undefined) return "X - 00:00:00";
+
+    const sign = relativeTime < 0 ? "-" : "+";
+    const absTime = Math.abs(relativeTime);
+    const hours = Math.floor(absTime / 3600)
+      .toString()
+      .padStart(2, "0");
+    const minutes = Math.floor((absTime % 3600) / 60)
+      .toString()
+      .padStart(2, "0");
+    const seconds = (absTime % 60).toString().padStart(2, "0");
+
+    return `X ${sign} ${hours}:${minutes}:${seconds}`;
   };
 
-  const utcTime = currentTime.toISOString().slice(0, 19).replace('T', ' ');
-  const jstTime = new Date(currentTime.getTime() + 9 * 3600000).toISOString().slice(0, 19).replace('T', ' ')
+  const utcTime = currentTime.toISOString().slice(0, 19).replace("T", " ");
+  const jstTime = new Date(currentTime.getTime() + 9 * 3600000)
+    .toISOString()
+    .slice(0, 19)
+    .replace("T", " ");
   return (
     <div className="flex flex-col">
       <div className="w-full flex justify-center gap-[1rem]">
-        <p className="text-[1.8rem]">{getTimeDiff(launchTime, currentTime)}</p>
+        <p className="text-[1.8rem]">
+          {formatRelativeTime(launchRelativeTime)}
+        </p>
         <div className="flex flex-col">
           <p className="text-[0.8rem]">UTC {utcTime}</p>
           <p className="text-[0.8rem]">JST {jstTime}</p>
         </div>
       </div>
-      <div className="w-full flex justify-center">
-        <p className="text-[1.2rem]">Launch time {launchTime.toISOString().slice(0, 16).replace('T', ' ')}</p>
+      <div className="flex justify-center w-full">
+        <p className="text-[1.2rem]">
+          Launch time {launchTime.toISOString().slice(0, 16).replace("T", " ")}
+        </p>
       </div>
     </div>
   );

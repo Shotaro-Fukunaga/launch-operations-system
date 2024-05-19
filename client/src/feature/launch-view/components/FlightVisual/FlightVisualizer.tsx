@@ -1,19 +1,20 @@
 import RocketComponent from "../../../../components/Svg/Rocket";
 
-import { useContext } from "react";
+// import { useContext } from "react";
 import { RocketEngineStatus } from "./EngineStatus";
 import { FuelTankStatus } from "./FuelTankStatus";
-import { WebSocketContext } from "../../../../context/WebSocketContext";
+// import { WebSocketContext } from "../../../../context/WebSocketContext";
 import { FairingStatus } from "./FairingStatus";
 import SatelliteBusStatus from "./SatelliteBusStatus";
+import { RocketStatusType } from "../../../../types/rocketStatusType";
 
-export const FlightVisualizer = () => {
-  const webSocketContext = useContext(WebSocketContext);
-  if (!webSocketContext) {
-    return <div>Loading...</div>;
-  }
-  const { messages } = webSocketContext;
-  const { rocketStatus } = messages;
+type Props = {
+  rocketStatus?: RocketStatusType;
+};
+
+
+export const FlightVisualizer:React.FC<Props> = ({rocketStatus}) => {
+ 
 
   return (
     <>
@@ -43,7 +44,7 @@ export const FlightVisualizer = () => {
           </div>
         </div>
 
-        <div className="h-full w-[30%] flex-col content-end">
+        <div className="h-full w-[30%] flex-col content-end border-l border-r border-gray-500">
           <RocketComponent
               fairingStatus={rocketStatus?.fairing_1?.status ?? 0}
               secondStageStatus={rocketStatus?.second_engine?.status ?? 0}

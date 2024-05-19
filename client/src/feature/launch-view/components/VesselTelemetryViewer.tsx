@@ -8,14 +8,23 @@ interface VesselTelemetryViewerProps {
 const VesselTelemetryViewer: React.FC<VesselTelemetryViewerProps> = ({
   telemetryData,
 }) => {
-  const [selectedCategory, setSelectedCategory] = useState("surface_info");
+  const [selectedCategory, setSelectedCategory] = useState("atmosphere_info");
   if (!telemetryData) {
     return (
-      <div className="h-full w-full flex justify-center items-center">
+      <div className="flex items-center justify-center w-full h-full">
         Preparing to get vessel telemetry.
       </div>
     );
   }
+
+  const formatKey = (key: string): string => {
+    // スネークケースをタイトルケースに変換する
+    return key
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+  
   const renderDetails = () => {
     const details =
       telemetryData[selectedCategory as keyof VesselTelemetryType];
@@ -33,7 +42,7 @@ const VesselTelemetryViewer: React.FC<VesselTelemetryViewerProps> = ({
                     <li key={index}>
                       {Object.entries(item).map(([subKey, subValue]) => (
                         <div key={subKey}>
-                          {subKey}: {subValue as string}
+                          {formatKey(subKey)}: {subValue as string}
                         </div>
                       ))}
                     </li>
@@ -44,7 +53,7 @@ const VesselTelemetryViewer: React.FC<VesselTelemetryViewerProps> = ({
           }
           return (
             <div key={key}>
-              <strong>{key}:</strong> {JSON.stringify(value)}
+              <strong>{formatKey(key)}:</strong> {JSON.stringify(value)}
             </div>
           );
         })}
@@ -53,18 +62,22 @@ const VesselTelemetryViewer: React.FC<VesselTelemetryViewerProps> = ({
   };
 
   return (
-    <div className="h-full w-full">
+    <div className="w-full h-full text-[0.8rem]">
+      <div className="text-center bg-gray-600">
+        <h2 className="font-bold ">Vessel Telemetry</h2>
+      </div>
       <select
         value={selectedCategory}
         onChange={(e) => setSelectedCategory(e.target.value)}
+        className="border border-gray-500 w-full px-[0.4rem] shadow-md"
       >
-        <option value="">Select a category</option>
+        {/* <option value="">Select a category</option> */}
         <option value="surface_info">Surface Info</option>
         <option value="orbit_info">Orbit Info</option>
         <option value="atmosphere_info">Atmosphere Info</option>
         <option value="delta_v_status">Delta-V Status</option>
       </select>
-      <div>{renderDetails()}</div>
+      <div className="px-[1rem]">{renderDetails()}</div>
     </div>
   );
 };

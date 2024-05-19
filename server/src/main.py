@@ -1,23 +1,18 @@
+"""LaunchOperationsAPI FastAPI application."""
+
+import asyncio
+import json
 import logging
-from http.client import HTTPException
-from fastapi import FastAPI, WebSocket, WebSocket
+
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from src.model import LaunchParameters
+
+from src.model import LaunchCommand
+from src.utils.krpc_module.auto_pilot_manager import FlightManager
 from src.utils.krpc_module.krpc_client import KrpcClient
-from src.utils.krpc_module.vessel_manager import VesselManager
-from src.settings.config import FLIGHT_PLANS, rocket_schema_list
-from src.utils.websocket_handler import common_websocket_handler
-from src.utils.krpc_module.auto_pilot_manager import AutoPilotManager
-
-# ロギングの基本設定
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("launch_operations_api")
-
 
 app = FastAPI(title="LaunchOperationsAPI", version="0.1")
 
-
-# CORS設定
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,66 +21,74 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# TODO 接続がきれても復帰できるようにする
-krpc_client = KrpcClient("LaunchOperationsAPI")
-vessel_manager = VesselManager(krpc_client.client, rocket_schema_list)
+logger = logging.getLogger(__name__)
+krpc = KrpcClient("MyKSPConnection")
 
 
-@app.get("/flight-plans")
-def read_flight_plans():
-    """Get all flight plans and event plans stored in the server"""
-    # TODO クライアントwebsocketのflightエンドポイントが実行するときに、このエンドポイントからデータを取得する
-    return FLIGHT_PLANS.get("flight_plans", [])
+@app.websocket("/ws/launch-management")
+async def websocket_launch_management(websocket: WebSocket) -> None:
+    """Manage the launch process through WebSocket communication."""
+    auto_pilot = FlightManager(krpc)
+    await websocket.accept()
+
+    telemetry_task = asyncio.create_task(send_telemetry(websocket, auto_pilot))
+    commands_task = asyncio.create_task(receive_commands(websocket, auto_pilot))
+
+    done, pending = await asyncio.wait(
+        [telemetry_task, commands_task],
+        return_when=asyncio.FIRST_COMPLETED,
+    )
+
+    for task in pending:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            logger.info("Cancelled pending task")
+
+        # Clean up the FlightManager instance
+    await auto_pilot.close()
 
 
-@app.post("/start-launch-sequence")
-def start_launch_sequence(body: LaunchParameters):
-    if not krpc_client.is_connected:
-        raise HTTPException(status_code=503, detail="KRPC server is not connected.")
-    auto_pilot = AutoPilotManager(vessel_manager)
-    return auto_pilot.launch_sequence(**body.model_dump())
+async def send_telemetry(websocket: WebSocket, auto_pilot: FlightManager) -> None:
+    """Send telemetry data periodically to the connected client."""
+    try:
+        while True:
+            await websocket.send_json(await auto_pilot.get_telemetry())
+            await asyncio.sleep(1)
+    except WebSocketDisconnect:
+        logger.info("WebSocket connection closed by client.")
+    except Exception:
+        logger.exception("Error sending telemetry")
+        raise
 
 
-@app.get("/get-vessel-telemetry")
-def get_telemetry():
-    if not krpc_client.is_connected:
-        raise HTTPException(status_code=503, detail="KRPC server is not connected.")
-    return vessel_manager.get_vessel_telemetry()
+async def receive_commands(websocket: WebSocket, auto_pilot: FlightManager) -> None:
+    """Receive and handle commands from the connected client."""
+    try:
+        while True:
+            message = await websocket.receive_text()
+            data = json.loads(message)
+            command_data = LaunchCommand.model_validate(data)
+
+            if command_data.command == "disconnect":
+                logger.info("Disconnect command received, closing connection.")
+                await websocket.close()
+                break
+            await execute_command(command_data, auto_pilot)
+    except WebSocketDisconnect:
+        logger.info("WebSocket connection closed by client.")
+    except asyncio.CancelledError:
+        logger.info("WebSocket task was cancelled")
+    except Exception:
+        logger.exception("An unexpected error occurred")
+        await websocket.close(code=1011, reason="Unexpected error occurred")
+        logger.info("WebSocket connection closed")
+        raise
 
 
-@app.get("/get-rocket-status")
-def get_rocket_status():
-    if not krpc_client.is_connected:
-        raise HTTPException(status_code=503, detail="KRPC server is not connected.")
-    return vessel_manager.get_rocket_status()
-
-
-@app.get("/get-flight-records")
-def get_flight_records():
-    if not krpc_client.is_connected:
-        raise HTTPException(status_code=503, detail="KRPC server is not connected.")
-    return vessel_manager.get_flight_records()
-
-
-@app.websocket("/ws/vessel-telemetry")
-async def websocket_vessel_telemetry(websocket: WebSocket):
-    if not krpc_client.is_connected:
-        await websocket.close(code=1011, reason="KRPC server is not connected.")
-        return
-    await common_websocket_handler(websocket, vessel_manager.get_vessel_telemetry)
-
-
-@app.websocket("/ws/rocket-status")
-async def websocket_rocket_status(websocket: WebSocket):
-    if not krpc_client.is_connected:
-        await websocket.close(code=1011, reason="KRPC server is not connected.")
-        return
-    await common_websocket_handler(websocket, vessel_manager.get_rocket_status)
-
-
-@app.websocket("/ws/flight-records")
-async def websocket_flight_records(websocket: WebSocket):
-    if not krpc_client.is_connected:
-        await websocket.close(code=1011, reason="KRPC server is not connected.")
-        return
-    await common_websocket_handler(websocket, vessel_manager.get_flight_records)
+async def execute_command(command_data: LaunchCommand, auto_pilot: FlightManager) -> None:
+    """Execute a received command based on the command type."""
+    if command_data.command == "sequence":
+        logger.info("Received sequence command for: %s", command_data.launch_date)
+        await auto_pilot.sequence_start(command_data)

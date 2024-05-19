@@ -20,7 +20,7 @@ export const FuelTankStatus: React.FC<Props> = ({ title, tankStatus }) => {
     oxidizerCapacity > 0 ? (oxidizerAmount / oxidizerCapacity) * 100 : 0;
 
   return (
-    <div className="w-full h-full text-[0.6rem] border border-gray-400">
+    <div className="w-full h-full text-[0.6rem]">
       <div className="flex justify-center w-full bg-gray-600">
         <h2 className="font-bold">{title}</h2>
       </div>

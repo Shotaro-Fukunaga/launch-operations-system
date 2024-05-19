@@ -7,9 +7,9 @@ type StatusLabelProps = {
 
 const StatusLabel: React.FC<StatusLabelProps> = ({ status, customLabels }) => {
   const defaultLabels: { [key: number]: string } = {
-    0: "STANDBY",
-    1: "ACTIVE",
-    2: "DEPLOYED",
+    0: "WAIT",
+    1: "GO",
+    2: "ACTIVE",
     3: "CUTOFF",
     99: "UNCONNECTED",
   };

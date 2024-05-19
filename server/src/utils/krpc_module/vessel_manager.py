@@ -1,60 +1,77 @@
-from src.utils.krpc_module.part_unit import PartUnit
-from src.utils.krpc_module.telemetry_manager import TelemetryManager
+import logging
+
 from krpc.services import Client
+
+from src.utils.krpc_module.part_unit import PartUnit
+
+logger = logging.getLogger(__name__)
 
 
 class VesselManager:
+    """ロケットの部品とKRPCのインスタンスを管理するクラス"""
 
-    def __init__(self, client: Client, rocket_schema_list):
+    def __init__(self: "VesselManager", client: Client, rocket_schema_list: list[dict]) -> None:
+        """Initialize"""
         self.client = client
+        if client.space_center is None:
+            error_message = "client.space_center is None. Cannot access active_vessel."
+            raise ValueError(error_message)
+
         self.vessel = client.space_center.active_vessel
+        # MechJeb2のインスタンスだが、KRPCの型定義には存在しないためignore
+        self.mech_jeb = client.mech_jeb  # type: ignore
         self.orbit = self.vessel.orbit
         self.reference_frame = self.vessel.orbit.body.reference_frame
         self.flight_info = self.vessel.flight(self.reference_frame)
-        self.telemetry_manager = TelemetryManager(self)
         self.rocket_schema_list = rocket_schema_list
-        self.flight_records = []
-        self.event_records = []
         self.unit_initiliaze()
 
-    def unit_initiliaze(self) -> None:
+    def unit_initiliaze(self: "VesselManager") -> None:
+        """各PartUnitを初期化する"""
         self.units: dict[str, PartUnit] = {config["tag"]: PartUnit(vessel=self.vessel, config=config) for config in self.rocket_schema_list}
 
-    def get_vessel_telemetry(self):
-        """TelemetryManager を通じてテレメトリ情報を取得する"""
-        return self.telemetry_manager.get_vessel_telemetry()
+    def set_all_units_status(self: "VesselManager", status: int) -> None:
+        """全てのPartUnitのステータスを更新する
 
-    def get_rocket_status(self):
-        """TelemetryManager を通じてロケットのステータスを取得する"""
-        return self.telemetry_manager.get_rocket_status()
-
-    def get_flight_records(self) -> list[dict]:
-        return {"flight_records": self.flight_records, "event_records": self.event_records}
-
-
-    def get_units_by_part_type(self, part_type) -> list[PartUnit]:
-        unit_list = []
+        Args:
+            status (int): 新しいステータス値
+        """
         for unit in self.units.values():
-            if unit.part_type == part_type:
-                unit_list.append(unit)
-        return unit_list
+            unit.status = status
 
-    def get_unit_group_name(self, group_name) -> list:
-        unit_list = []
-        for unit in self.units.values():
-            if unit.group_name == group_name:
-                unit_list.append(unit)
-        return unit_list
+    def get_units_by_part_type(self: "VesselManager", part_type: str) -> list[PartUnit]:
+        """指定された部品タイプのPartUnitを取得する
 
-    def get_unit_by_name(self, unit_name) -> PartUnit:
+        Args:
+            part_type (str): 検索する部品タイプ
+
+        Returns:
+            list[PartUnit]: 一致するPartUnitのリスト
+        """
+        return [unit for unit in self.units.values() if unit.part_type == part_type]
+
+    def get_unit_group_name(self: "VesselManager", group_name: str) -> list[PartUnit]:
+        """指定されたグループ名のPartUnitを取得する
+
+        Args:
+            group_name (str): 検索するグループ名
+
+        Returns:
+            list[PartUnit]: 一致するPartUnitのリスト
+        """
+        return [unit for unit in self.units.values() if unit.group_name == group_name]
+
+    def get_unit_by_name(self: "VesselManager", unit_name: str) -> PartUnit | None:
+        """指定された名前のPartUnitを取得する
+
+        Args:
+            unit_name (str): 検索するユニット名
+
+        Returns:
+            PartUnit|None: 一致するPartUnit、またはNone
+        """
         for unit in self.units.values():
             if unit.unit_name == unit_name:
+                unit.update()
                 return unit
         return None
-
-    def get_total_mass_by_group(self, group_name) -> float:
-        total_mass = 0
-        for unit in self.units.values():
-            if unit.group_name == group_name:
-                total_mass += getattr(unit.part, "mass", 0)
-        return total_mass

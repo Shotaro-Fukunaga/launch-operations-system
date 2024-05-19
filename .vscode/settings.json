@@ -1,0 +1,30 @@
+{
+    //Pythonの設定
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit",
+            "source.fixAll.ruff": "explicit"
+        }
+    },
+    // windowsの場合のインタープリタパスの設定
+    "python.defaultInterpreterPath": "${workspaceFolder}/server/.venv/Scripts/python",
+    // macの場合のインタープリタパスの設定
+    // "python.defaultInterpreterPath": "./.venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.testing.pytestEnabled": true,
+    "python.analysis.typeCheckingMode": "basic",
+    "ruff.organizeImports": true,
+    "ruff.showNotifications": "onError",
+    "ruff.lint.run": "onType",
+    // TypeScriptの設定
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    }
+}

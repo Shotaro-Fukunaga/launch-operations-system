@@ -64,10 +64,7 @@ export interface CommunicationStatus {
   signal_strength: number;
   signal_delay: number;
   total_comm_power: number;
-  control_path: Array<{
-    type: string;
-    signal_strength: number;
-  }>;
+
 }
 
 export interface SatelliteBusStatusType extends CommunicationStatus {

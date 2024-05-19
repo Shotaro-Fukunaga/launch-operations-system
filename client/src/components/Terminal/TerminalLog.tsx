@@ -14,6 +14,12 @@ const TerminalLog: React.FC<TerminalLogProps> = ({ logs }) => {
     }
   }, [logs]);
 
+  const formatTime = (timeString: string) => {
+    const [date, time] = timeString.split('T');
+    const [hours, minutes, seconds] = time.split('.')[0].split(':');
+    return `${date} ${hours}:${minutes}:${seconds}`;
+  };
+
   const renderContent = () => {
     if (!logs || logs.length === 0) {
       return (
@@ -21,14 +27,14 @@ const TerminalLog: React.FC<TerminalLogProps> = ({ logs }) => {
       );
     }
     return logs.map((log, index) => (
-      <div key={index} className="text-white text-[0.8rem]">
-        {/* TODO x + 00:00:00のように変更する */}- {log.event_details}
+      <div key={index} className="text-blue-300 text-[0.8rem]">
+        {formatTime(log.time)} - {log.level} - {log.msg}
       </div>
     ));
   };
 
   return (
-    <div className="w-full h-full relative shadow-md">
+    <div className="relative w-full h-full shadow-md">
       <div className="h-[8%] text-white text-[1rem] w-full bg-gray-600 shadow-md flex justify-center">
         Flight Event Log
       </div>

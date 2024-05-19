@@ -40,7 +40,7 @@ export const FairingStatus: React.FC<Props> = ({
     fairing2?.dynamic_pressure
   );
   return (
-    <div className="w-full h-full text-[0.6rem] border border-gray-400">
+    <div className="w-full h-full text-[0.6rem]">
       <div className="text-center bg-gray-600">
         <h2 className="font-bold">{title}</h2>
       </div>

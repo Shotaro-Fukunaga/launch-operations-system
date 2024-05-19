@@ -15,43 +15,56 @@ type Props = {
 
 const CesiumComponent: React.FC<Props> = ({ flightRecords }) => {
   const viewerRef = useRef<CesiumComponentRef<Cesium.Viewer>>(null);
-
+  const positionsRef = useRef<Cesium.Cartesian3[]>([]);
+  
   useEffect(() => {
     Cesium.Ion.defaultAccessToken = import.meta.env.VITE_CESIUM_ACCESS_TOKEN;
   }, []);
 
+
   useEffect(() => {
     const viewer = viewerRef.current?.cesiumElement;
-    if (viewer && flightRecords.length > 0) {
-      const positions = flightRecords.map((record) =>
-        Cesium.Cartesian3.fromDegrees(
-          record.longitude,
-          record.latitude,
-          record.altitude
-        )
-      );
 
-      const entity = viewer.entities.add({
+    if (viewer) {
+      // 初期のポリラインエンティティを作成
+      const polylineEntity = viewer.entities.add({
         name: "Rocket Trajectory",
         polyline: {
-          positions: positions,
-          width: 5,
-          material: Cesium.Color.RED,
+          positions: new Cesium.CallbackProperty(() => {
+            return positionsRef.current;
+          }, false),
+          width: 4,
+          material: new Cesium.PolylineGlowMaterialProperty({
+            glowPower: 0.2,
+            // color: Cesium.Color.RED,
+          }),
+          arcType: Cesium.ArcType.GEODESIC,
         },
       });
 
-      viewer.zoomTo(entity);
-    }
+      // 新しいフライトレコードが追加されたときにポジションを更新
+      const updatePositions = (newRecords: FlightRecord[]) => {
+        positionsRef.current = newRecords.map(record =>
+          Cesium.Cartesian3.fromDegrees(
+            record.longitude,
+            record.latitude,
+            record.altitude
+          )
+        );
+      };
 
-    return () => {
-      if (viewer) {
-        viewer.entities.removeAll();
-      }
-    };
+      // 初回ロード時にポジションを設定
+      updatePositions(flightRecords);
+
+      // フライトレコードが更新されるたびにポジションを更新
+      return () => {
+        viewer.entities.remove(polylineEntity);
+      };
+    }
   }, [flightRecords]);
 
   return (
-    <div className="h-full w-full">
+    <div className="w-full h-full">
       <Viewer
         ref={viewerRef}
         style={{ height: "100%", width: "100%" }}
@@ -71,7 +84,7 @@ const CesiumComponent: React.FC<Props> = ({ flightRecords }) => {
               record.latitude,
               record.altitude
             )}
-            point={{ pixelSize: 10, color: Cesium.Color.WHITE }}
+            // point={{ pixelSize: 10, color: Cesium.Color.WHITE }}
           />
         ))}
       </Viewer>

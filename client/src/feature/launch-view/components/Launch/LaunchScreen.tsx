@@ -7,18 +7,33 @@ import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 
 type Props = {
   orbitInfo?: OrbitInfoType;
+  launchRelativeTime?: string
+  sendCommand: (command: object) => void;
 };
 
-const LaunchScreen: FC<Props> = ({ orbitInfo }) => {
+const LaunchScreen: FC<Props> = ({ orbitInfo,launchRelativeTime,sendCommand }) => {
   const launchTime = new Date();
-  launchTime.setMinutes(launchTime.getMinutes() + 10);
+  launchTime.setSeconds(launchTime.getSeconds() + 15);
+  const handleLaunchClick = () => {
+    const command = {
+      launch_date: launchTime,
+      command: "sequence",
+      target_orbit: {
+        periapsis: 200000,
+        apoapsis: 200000,
+        inclination: 39.39,
+        speed: 7788
+      }
+    };
+    sendCommand(command);
+  };
   return (
     <div className="w-full h-full">
       <LaunchHeader />
-      <LaunchTimer launchTime={launchTime} />
+      <LaunchTimer launchTime={launchTime} launchRelativeTime={launchRelativeTime}/>
       <OrbitInfo orbitInfo={orbitInfo} />
-      <div className="w-full flex justify-center p-5">
-        <button className="bg-blue-500 text-white flex items-center justify-center gap-2">
+      <div className="flex justify-center w-full p-5">
+        <button onClick={handleLaunchClick} className="flex items-center justify-center gap-2 text-white bg-blue-500">
           <RocketLaunchIcon />
           Launch sequence start
         </button>

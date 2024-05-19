@@ -1,39 +1,22 @@
-# pip listの内容をrequirements.txtに移す
-.PHONY: pip-freeze
-pip-freeze:
-	pip freeze > requirements.txt
+# .envファイルの作成コマンド
+make-env:
+	@if [ -e .env ] ; then \
+        echo ".env already exists"; \
+    else \
+		cp .env.example .env; \
+	fi
 
-.PHONY: pip-uninstall
-pip-uninstall:
-	cat requirements.txt | xargs -n 1 pip uninstall -y
 
-.PHONY: run
 run:
-	uvicorn src.main:app --reload
+	poetry run uvicorn src.main:app --reload
 
 
 
-# ************* DataBase関連のショートカット **************
-
-# マイグレーションファイルの自動生成
-.PHONY: autogenerate
-autogenerate:
-	$(eval NAME := $(filter-out $@,$(MAKECMDGOALS)))
-	cd src/database && alembic -c alembic.ini revision --autogenerate -m "$(NAME)"
-%:
-	@:
-
-# マイグレート
-migrate:
-	cd src/database && alembic upgrade head
-
-# 全てのマイグレートをdropする
-rollback:
-	cd src/database && alembic downgrade base
-
-# 一個前のマイグレートをdropする
-downgrade:
-	cd src/database && alembic downgrade -1
-# ************* ************************** **************
-
-
+poetry-setup:
+	@echo "Setting up the project..."
+	poetry --version || curl -sSL https://install.python-poetry.org | python3 -
+	@echo "Poetry version: `poetry --version`"
+	@echo "Configuring Poetry to create virtualenvs in the project directory..."
+	@POETRY_VIRTUALENVS_IN_PROJECT=true poetry config virtualenvs.in-project
+	@echo "Installing dependencies..."
+	POETRY_VIRTUALENVS_IN_PROJECT=true poetry install
