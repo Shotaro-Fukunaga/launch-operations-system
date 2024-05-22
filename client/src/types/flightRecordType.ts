@@ -10,12 +10,15 @@ export interface FlightRecord {
   periapsis_altitude: number;
   inclination: number;
   eccentricity: number;
+  event?: string;
+  display_log?:string
 }
 
 export interface EventRecord {
   time: string;
-  level: string;
-  msg: string;
+  launch_relative_time:number;
+  event: string;
+  
 }
 
 export interface FlightEventRecord {

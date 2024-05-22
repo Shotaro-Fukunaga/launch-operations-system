@@ -20,6 +20,22 @@ const TerminalLog: React.FC<TerminalLogProps> = ({ logs }) => {
     return `${date} ${hours}:${minutes}:${seconds}`;
   };
 
+  const formatRelativeTime = (relativeTime: number | undefined) => {
+    if (relativeTime === undefined) return "X - 00:00:00";
+
+    const sign = relativeTime < 0 ? "-" : "+";
+    const absTime = Math.abs(relativeTime);
+    const hours = Math.floor(absTime / 3600)
+      .toString()
+      .padStart(2, "0");
+    const minutes = Math.floor((absTime % 3600) / 60)
+      .toString()
+      .padStart(2, "0");
+    const seconds = (absTime % 60).toString().padStart(2, "0");
+
+    return `X ${sign} ${hours}:${minutes}:${seconds}`;
+  };
+
   const renderContent = () => {
     if (!logs || logs.length === 0) {
       return (
@@ -28,7 +44,7 @@ const TerminalLog: React.FC<TerminalLogProps> = ({ logs }) => {
     }
     return logs.map((log, index) => (
       <div key={index} className="text-blue-300 text-[0.8rem]">
-        {formatTime(log.time)} - {log.level} - {log.msg}
+        {formatRelativeTime(log.launch_relative_time)} : {log.event}
       </div>
     ));
   };

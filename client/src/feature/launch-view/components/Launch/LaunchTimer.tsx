@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 type LaunchTimerProps = {
-  launchTime: Date;
+  launchTime: Date | null;
   launchRelativeTime?: number;
 };
 
@@ -40,6 +40,10 @@ const LaunchTimer: React.FC<LaunchTimerProps> = ({
     .toISOString()
     .slice(0, 19)
     .replace("T", " ");
+
+  const formattedLaunchTime = launchTime
+    ? launchTime.toISOString().slice(0, 16).replace("T", " ")
+    : "0000-00-00 00:00";
   return (
     <div className="flex flex-col">
       <div className="w-full flex justify-center gap-[1rem]">
@@ -52,9 +56,7 @@ const LaunchTimer: React.FC<LaunchTimerProps> = ({
         </div>
       </div>
       <div className="flex justify-center w-full">
-        <p className="text-[1.2rem]">
-          Launch time {launchTime.toISOString().slice(0, 16).replace("T", " ")}
-        </p>
+        <p className="text-[1.2rem]">Launch time {formattedLaunchTime}</p>
       </div>
     </div>
   );

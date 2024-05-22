@@ -35,6 +35,7 @@ class FlightManager:
         self.status_manager = RocketStatusManager(self)
         self.log_file_path = Path(FLIGHT_LOG_FILE_PATH)
         self.executor = ThreadPoolExecutor()
+        self.is_launching = False
 
     async def close(self: "FlightManager") -> None:
         """クリーンアップ処理を実行する"""
@@ -117,22 +118,27 @@ class FlightManager:
         ascent_autopilot.enabled = True
 
         await self.activate_next_stage_async()
+        self.is_launching = True
         logger.info("Rocket Lift off - Stage activated")
 
         max_q_passed = False
+        self.add_event_log(display_log="Rocket Lift off - Stage activated")
         try:
             while ascent_autopilot.enabled:
                 if self.vessel_manager.flight_info.surface_altitude > max_q_altitude and not max_q_passed:
                     max_q_passed = True
-                    self.add_event_log("Max Q Passed - Maximum dynamic pressure altitude reached")
+                    self.add_event_log(display_log="Max Q Passed - Maximum dynamic pressure altitude reached")
                 await asyncio.sleep(1)
         finally:
             vessel = self.vessel_manager.vessel
+            vessel.control.throttle = 0
+            await asyncio.sleep(3)
             await self.activate_next_stage_async()
             vessel.control.sas = True
-            await asyncio.sleep(2)  # 姿勢が安定するまで待機
+            await asyncio.sleep(4)  # 姿勢が安定するまで待機
             vessel.control.sas_mode = SASMode.anti_radial  # アンチラジアル
-            self.add_event_log("Launch successful - The rocket has reached the target orbit")
+            self.add_event_log(display_log="Launch successful! The rocket has triumphantly reached the target orbit! ")
+            self.is_launching = False
 
     async def activate_next_stage_async(self: "FlightManager") -> None:
         """次のステージを非同期でアクティブにする関数"""
@@ -180,14 +186,19 @@ class FlightManager:
             logger.exception("Error recording flight data")
             return None
 
-    def add_event_log(self: "FlightManager", msg: str) -> None:
+    def add_event_log(self: "FlightManager", msg: str | None = None, display_log: str | None = None) -> None:
         """イベントログを追加する"""
         flight_data = self.flight_record_data()
         if flight_data is None:
             logger.error("Failed to get flight data for event log.")
             return
 
-        new_data = {"event": msg}
-        flight_data.update(new_data)
-        if flight_data:
+        new_data = {}
+        if msg is not None:
+            new_data["event"] = msg
+        if display_log is not None:
+            new_data["display_log"] = display_log
+
+        if new_data:
+            flight_data.update(new_data)
             LogManager.save_to_log_sync(flight_data, self.log_file_path)

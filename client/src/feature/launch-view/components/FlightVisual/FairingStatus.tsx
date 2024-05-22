@@ -45,12 +45,14 @@ export const FairingStatus: React.FC<Props> = ({
         <h2 className="font-bold">{title}</h2>
       </div>
       <ul className="p-[0.4rem] space-y-[0.1rem]">
-        <li>Temp: {temp} / {maxTemp} °C</li>
+        <li>
+          Temp: {temp} / {maxTemp} °C
+        </li>
         <li>Dyn Press: {dynPress} Pa</li>
         <li>
           <StatusLabel
             status={fairing1?.status}
-            customLabels={{ 3: "Jettisoned" }}
+            customLabels={{ 2: "Ascent", 3: "Jettisoned" }}
           />
         </li>
       </ul>

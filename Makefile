@@ -3,7 +3,7 @@
 
 # APIを起動する
 api-run:
-	cd server && poetry uvicorn src.main:app --reload
+	cd server && poetry run uvicorn src.main:app --reload
 
 # クライアントを起動する
 client-run:

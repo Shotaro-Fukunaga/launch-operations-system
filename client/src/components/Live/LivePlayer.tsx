@@ -5,25 +5,25 @@ export const LivePlayer = () => {
   const playerRef = useRef(null);
 
   // 再生位置を調整する関数
-  const handleSeekToEnd = () => {
-    const player = playerRef.current as ReactPlayer | null;
-    if (player && player.getDuration) {
-      const duration = player.getDuration();
-      player.seekTo(duration, "seconds");
-    }
-  };
+  // const handleSeekToEnd = () => {
+  //   const player = playerRef.current as ReactPlayer | null;
+  //   if (player && player.getDuration) {
+  //     const duration = player.getDuration();
+  //     player.seekTo(duration-1, "seconds");
+  //   }
+  // };
 
-  useEffect(() => {
-    // コンポーネントがマウントされたらすぐに最新位置にシークする
-    handleSeekToEnd();
+  // useEffect(() => {
+  //   // コンポーネントがマウントされたらすぐに最新位置にシークする
+  //   handleSeekToEnd();
 
-    const interval = setInterval(() => {
-      handleSeekToEnd();
-    }, 60000);
+  //   const interval = setInterval(() => {
+  //     handleSeekToEnd();
+  //   }, 10000);
 
-    // コンポーネントがアンマウントされるときにインターバルをクリアする
-    return () => clearInterval(interval);
-  }, []);
+  //   // コンポーネントがアンマウントされるときにインターバルをクリアする
+  //   return () => clearInterval(interval);
+  // }, []);
 
   return (
     <div className="player-wrapper">
@@ -36,8 +36,27 @@ export const LivePlayer = () => {
         controls={true}
         playing={true}
         muted={true}
-        onReady={handleSeekToEnd}
-        preload="auto"
+        // onReady={handleSeekToEnd}
+        config={{
+          file: {
+            forceHLS: true,
+            attributes: {
+              preload: 'auto',
+              autoPlay: true,
+              controls: true,
+              muted: true
+            },
+            hlsOptions: {
+              liveSyncDurationCount: 1,
+              lowLatencyMode: true,
+              initialLiveManifestSize: 1,
+              maxBufferLength: 1,
+              maxMaxBufferLength: 1,
+              maxBufferSize: 10 * 1000 * 1000,
+              maxBufferHole: 0.05
+            }
+          }
+        }}
       />
     </div>
   );

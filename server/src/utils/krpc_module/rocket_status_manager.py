@@ -27,8 +27,15 @@ class RocketStatusManager:
         self.flight_dynamics = FlightDynamics(self.vessel_manager.vessel)
         self.flight_info = self.vessel_manager.flight_info
         self.vessel = self.vessel_manager.vessel
+        self.solar_panels_deployed_logged = False
 
-    def active_check(self: RocketStatusManager, unit: PartUnit, msg: str | None = None, custom_cond: bool = True) -> None:
+    def active_check(
+        self: RocketStatusManager,
+        unit: PartUnit,
+        msg: str | None = None,
+        custom_cond: bool = True,
+        display_log: str | None = None,
+    ) -> None:
         """ユニットのステータスをアクティブに設定するメソッド
 
         指定されたユニットがアクティブ状態であるかを確認し、アクティブである場合にユニットのステータスをACTIVEに設定する
@@ -45,11 +52,11 @@ class RocketStatusManager:
             if unit.part and unit.status == GO and custom_cond:
                 unit.status = ACTIVE
                 msg = msg or f"{unit.unit_name.capitalize().replace('_', ' ')} ACTIVE"
-                self.flight_manager.add_event_log(msg)
+                self.flight_manager.add_event_log(msg, display_log)
         except Exception:
             logger.exception("Error in active_check for unit %s", unit.unit_name)
 
-    def cutoff_check(self: RocketStatusManager, unit: PartUnit, msg: str | None = None) -> None:
+    def cutoff_check(self: RocketStatusManager, unit: PartUnit, msg: str | None = None, display_log: str | None = None) -> None:
         """ユニットのステータスをカットオフに設定するメソッド
 
         指定されたユニットがカットオフ状態であるかを確認し、カットオフである場合にユニットのステータスをCUTOFFに設定する
@@ -65,7 +72,7 @@ class RocketStatusManager:
             if not unit.part and unit.status != CUTOFF:
                 unit.status = CUTOFF
                 msg = msg or f"{unit.unit_name.capitalize().replace('_', ' ')} Cutoff."
-                self.flight_manager.add_event_log(msg)
+                self.flight_manager.add_event_log(msg, display_log)
         except Exception:
             logger.exception("Error in cutoff_check for unit %s", unit.unit_name)
 
@@ -89,19 +96,21 @@ class RocketStatusManager:
         """
         status_methods = {
             "antenna": self.get_antenna_status,
-            "solar_panel_1": self.get_solar_panel_status,
-            "solar_panel_2": self.get_solar_panel_status,
+            # "solar_panel_1": self.get_solar_panel_status,
+            # "solar_panel_2": self.get_solar_panel_status,
             "reaction_wheel": self.get_reaction_wheel_status,
             "satellite_bus": self.get_satellite_bus_status,
-            "fairing_1": self.get_fairing_status,
-            "fairing_2": self.get_fairing_status,
+            # "fairing_1": self.get_fairing_status,
+            # "fairing_2": self.get_fairing_status,
         }
 
         result = {name: method(name) for name, method in status_methods.items()}
         main_stage_status = self.get_main_stage_status()
         second_stage_status = self.get_second_stage_status()
+        fairing_status = self.get_fairing_status("fairing_1", "fairing_2")
+        solar_panel_status = self.get_solar_panel_status("solar_panel_1", "solar_panel_2")
 
-        return {**result, **main_stage_status, **second_stage_status}
+        return {**result, **main_stage_status, **second_stage_status, **solar_panel_status, **fairing_status}
 
     @staticmethod
     def get_status_values(status: int, obj: Any, keys_defaults: dict[str, Any]) -> dict[str, int]:  # noqa: ANN401
@@ -153,24 +162,61 @@ class RocketStatusManager:
             return self.get_status_values(status=unit.status, obj=unit.part.antenna, keys_defaults=keys_defaults)
         return keys_defaults
 
-    def get_solar_panel_status(self: RocketStatusManager, unit_name: str) -> dict:
+    # def get_solar_panel_status(self: RocketStatusManager, unit_name: str) -> dict:
+    #     """指定されたソーラーパネルユニットの状態情報を取得する
+
+    #     Args:
+    #         unit_name (str): ソーラーパネルユニットの名前
+
+    #     Returns:
+    #         dict: ソーラーパネルの状態に関する情報を含む辞書
+    #             - energy_flow (float): ソーラーパネルからのエネルギー流出量
+    #             - sun_exposure (float): ソーラーパネルの太陽への露出度
+    #     """
+    #     keys_defaults = {"energy_flow": 0, "sun_exposure": 0}
+    #     unit = self.vessel_manager.get_unit_by_name(unit_name)
+    #     unit = self.vessel_manager.get_unit_by_name("solar_panel_1")
+    #     unit = self.vessel_manager.get_unit_by_name("solar_panel_2")
+    #     if unit and unit.part and hasattr(unit.part, "solar_panel") and unit.part.solar_panel:
+    #         self.active_check(unit=unit, custom_cond=unit.part.solar_panel.deployed)
+    #         return self.get_status_values(unit.status, unit.part.solar_panel, keys_defaults)
+
+    #     # unitが存在しない、またはsolar_panelがない場合
+    #     return {"status": CUTOFF, **keys_defaults}
+    def get_solar_panel_status(self: RocketStatusManager, *unit_names: str) -> dict:
         """指定されたソーラーパネルユニットの状態情報を取得する
 
         Args:
-            unit_name (str): ソーラーパネルユニットの名前
+            unit_names (str): ソーラーパネルユニットの名前（複数指定可）
 
         Returns:
-            dict: ソーラーパネルの状態に関する情報を含む辞書
-                - energy_flow (float): ソーラーパネルからのエネルギー流出量
-                - sun_exposure (float): ソーラーパネルの太陽への露出度
+            dict: 各ソーラーパネルの状態に関する情報を含む辞書
+                - unit_name (dict): ソーラーパネルユニットの状態情報を含む辞書
+                    - energy_flow (float): ソーラーパネルからのエネルギー流出量
+                    - sun_exposure (float): ソーラーパネルの太陽への露出度
+                    - status (str): ユニットのステータス
         """
+        results = {}
         keys_defaults = {"energy_flow": 0, "sun_exposure": 0}
-        unit = self.vessel_manager.get_unit_by_name(unit_name)
-        if unit and unit.part and hasattr(unit.part, "solar_panel"):
-            self.active_check(unit=unit, custom_cond=hasattr(unit.part.solar_panel, "deployed"))
-            return self.get_status_values(unit.status, unit.part.solar_panel, keys_defaults)
+        all_deployed = True
 
-        return keys_defaults
+        for unit_name in unit_names:
+            unit = self.vessel_manager.get_unit_by_name(unit_name)
+            if unit and unit.part and hasattr(unit.part, "solar_panel") and unit.part.solar_panel:
+                self.active_check(unit=unit, custom_cond=unit.part.solar_panel.deployed)
+                results[unit_name] = self.get_status_values(unit.status, unit.part.solar_panel, keys_defaults)
+                if unit.status != ACTIVE:
+                    all_deployed = False
+            else:
+                results[unit_name] = {"status": CUTOFF, **keys_defaults}
+                all_deployed = False
+
+        if all_deployed and not self.solar_panels_deployed_logged:
+            display_log = "Both solar panels deployed successfully."
+            self.flight_manager.add_event_log(display_log=display_log)
+            self.solar_panels_deployed_logged = True  # ログが追加されたことを記録
+
+        return results
 
     def get_reaction_wheel_status(self: RocketStatusManager, unit_name: str) -> dict:
         """指定されたリアクションホイールユニットの状態情報を取得する
@@ -246,25 +292,65 @@ class RocketStatusManager:
         communication_status = self.get_communication_status()
         return {**bus_status, **communication_status}
 
-    def get_fairing_status(self: RocketStatusManager, unit_name: str) -> dict:
+    # def get_fairing_status(self: RocketStatusManager, unit_name: str) -> dict:
+    #     """フェアリングのステータスを取得するメソッド
+
+    #     Args:
+    #         unit_name (str): フェアリングユニットの名前
+
+    #     Returns:
+    #         dict: フェアリングユニットのステータスを含む辞書
+    #             - dynamic_pressure (float): 動的圧力
+    #             - temperature (float): 温度
+    #             - max_temperature (float): 最大温度
+    #     """
+    #     keys_defaults = {"dynamic_pressure": 0, "temperature": 0, "max_temperature": 0}
+    #     unit = self.vessel_manager.get_unit_by_name(unit_name)
+    #     if unit is not None:
+    #         self.cutoff_check(unit=unit, msg="Fairing Jettisoned.")
+    #         if unit.part:
+    #             return self.get_status_values(unit.status, unit.part, keys_defaults)
+    #         else:
+    #             # unitが存在するがpartがNoneの場合
+    #             return self.get_status_values(unit.status, None, keys_defaults)
+    #     else:
+    #         # unitがNoneの場合
+    #         return {"status": CUTOFF, **keys_defaults}
+
+    def get_fairing_status(self: RocketStatusManager, *unit_names: str) -> dict:
         """フェアリングのステータスを取得するメソッド
 
         Args:
-            unit_name (str): フェアリングユニットの名前
+            unit_names (str): フェアリングユニットの名前（複数指定可）
 
         Returns:
-            dict: フェアリングユニットのステータスを含む辞書
-                - dynamic_pressure (float): 動的圧力
-                - temperature (float): 温度
-                - max_temperature (float): 最大温度
+            dict: 各フェアリングユニットのステータスを含む辞書
+                - unit_name (dict): フェアリングユニットの状態情報を含む辞書
+                    - dynamic_pressure (float): 動的圧力
+                    - temperature (float): 温度
+                    - max_temperature (float): 最大温度
+                    - status (str): ユニットのステータス
         """
+        results = {}
         keys_defaults = {"dynamic_pressure": 0, "temperature": 0, "max_temperature": 0}
-        unit = self.vessel_manager.get_unit_by_name(unit_name)
-        if unit is not None:
-            self.cutoff_check(unit=unit, msg="Fairing Jettisoned.")
-        if unit and unit.part:
-            return self.get_status_values(unit.status, unit.part, keys_defaults)
-        return keys_defaults
+        is_launching = self.flight_manager.is_launching
+
+        for unit_name in unit_names:
+            unit = self.vessel_manager.get_unit_by_name(unit_name)
+            if unit is not None:
+                self.cutoff_check(unit=unit, msg="Fairing Jettisoned.")
+                if is_launching:
+                    self.active_check(unit=unit, custom_cond=unit.part is not None)
+                if unit.part:
+                    results[unit_name] = self.get_status_values(unit.status, unit.part, keys_defaults)
+                else:
+                    # unitが存在するがpartがNoneの場合
+                    results[unit_name] = self.get_status_values(unit.status, None, keys_defaults)
+            else:
+                # unitがNoneの場合
+                results[unit_name] = {"status": CUTOFF, **keys_defaults}
+
+        return results
 
     def get_tank_status(self: RocketStatusManager, part: Part | None, status: int) -> dict[str, Any]:
         """タンクのステータスを取得するメソッド
@@ -326,14 +412,15 @@ class RocketStatusManager:
         main_engine = self.vessel_manager.get_unit_by_name("main_engine")
         main_tank = self.vessel_manager.get_unit_by_name("main_tank")
 
-        if main_engine and main_engine.part and hasattr(main_engine.part, "engine"):
-            is_active = hasattr(main_engine.part.engine, "active")
+        if main_engine and main_engine.part and hasattr(main_engine.part, "engine") and main_engine.part.engine:
+            is_active = main_engine.part.engine.active
             self.active_check(main_engine, f"{main_engine.unit_name.capitalize().replace('_', ' ')} Ignition", is_active)
             if main_tank:
                 self.active_check(unit=main_tank, custom_cond=is_active)
 
         if main_engine:
-            self.cutoff_check(main_engine, "MECO main engine cutoff.")
+            display_log_msg = "MECO main engine cutoff.\n Fairing Jettisoned."
+            self.cutoff_check(main_engine, "MECO main engine cutoff.", display_log=display_log_msg)
         if main_tank:
             self.cutoff_check(main_tank)
 
@@ -361,13 +448,14 @@ class RocketStatusManager:
         second_engine = self.vessel_manager.get_unit_by_name("second_engine")
         second_tank = self.vessel_manager.get_unit_by_name("second_tank")
 
-        if second_engine and second_engine.part and hasattr(second_engine.part, "engine"):
-            is_active = hasattr(second_engine.part.engine, "active")
+        if second_engine and second_engine.part and hasattr(second_engine.part, "engine") and second_engine.part.engine:
+            is_active = second_engine.part.engine.active
             self.active_check(second_engine, f"{second_engine.unit_name.capitalize().replace('_', ' ')} Ignition", is_active)
             if second_tank:
                 self.active_check(unit=second_tank, custom_cond=is_active)
+
         if second_engine:
-            self.cutoff_check(second_engine, "SECO second engine cutoff.")
+            self.cutoff_check(second_engine, "SECO second engine cutoff.", display_log="SECO second engine cutoff.")
         if second_tank:
             self.cutoff_check(second_tank)
 
