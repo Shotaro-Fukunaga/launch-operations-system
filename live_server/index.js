@@ -25,20 +25,21 @@ const config = {
         vc: "h264_nvenc", // NVIDIA GPUを使ったH264エンコーディングを使用
         ac: "copy", // オーディオは再エンコードせずにコピーする
         vcParams: [
-          '-preset', 'llhp',       // エンコーダーのプリセットとして低遅延高性能を指定
-          '-profile:v', 'main',    // H264のプロファイルをmainに設定
-          '-rc:v', 'vbr_hq',       // 可変ビットレートで高品質を指定
-          '-cq:v', '19',           // 品質基準値（低いほど高品質）
-          '-b:v', '1500k',         // ビデオビットレートの基本値
-          '-maxrate:v', '2000k',   // ビデオの最大ビットレート
-          '-bufsize:v', '5000k',   // ビットレート制御のバッファサイズ
+          '-preset', 'ultrafast',
+          '-tune', 'zerolatency',
+          '-g', '12',
+          '-keyint_min', '12',
+          '-sc_threshold', '0',
+          '-b:v', '2000k',
+          '-maxrate', '2000k',
+          '-bufsize', '4000k'
         ],
         acParams: [
           '-b:a', '128k',         // オーディオビットレート
           '-ac', '2',             // オーディオのチャンネル数
           '-ar', '48000'          // オーディオのサンプルレート（Hz）
         ],
-        hlsFlags: '[hls_time=0.5:hls_list_size=2:hls_flags=delete_segments+append_list]' // HLSストリーミングの具体的なフラグ設定
+        hlsFlags: '[hls_time=0.05:hls_list_size=3:hls_flags=delete_segments+append_list]'
       }
     ]
   }

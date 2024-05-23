@@ -1,5 +1,3 @@
-from datetime import datetime, timedelta, timezone
-
 from src.utils.commons.read_json import read_json
 
 # KSPロケットの構造を設定したスキーマJSONファイルのパス
@@ -13,4 +11,5 @@ CUTOFF = 3  # カットオフ
 
 
 # ログファイルのパス
-FLIGHT_LOG_FILE_PATH = f"./src/logs/{datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d')}-los-flight.log"
+# FLIGHT_LOG_FILE_PATH = f"./src/logs/{datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d')}-los-flight.log"
+FLIGHT_LOG_FILE_PATH = "./src/logs/los-flight.log"

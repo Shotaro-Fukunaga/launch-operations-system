@@ -3,24 +3,25 @@ import { Line } from "react-chartjs-2";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
 
-interface RealTimeChartProps<T extends { time: string }> {
+
+
+interface RealTimeChartProps<T extends { launch_relative_time: number }> {
   data: T[];
   attributeKey: keyof T; // T型の任意のキー
   attributeName: string; // チャートの軸ラベルに表示される属性名
 }
 
-function RealTimeChart<T extends { time: string }>({
+function RealTimeChart<T extends { launch_relative_time: number }>({
   data,
   attributeKey,
   attributeName,
 }: RealTimeChartProps<T>): JSX.Element {
   const [chartData, setChartData] = useState({
-    labels: data.map((item) => item["time"]),
+    labels: data.map((item) => item["launch_relative_time"]),
     datasets: [
       {
         label: attributeName,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data: data.map((item) => item[attributeKey] as any), // 型の一般性を保持しつつ、anyにアサーション
+        data: data.map((item) => item[attributeKey] as number),
         borderColor: "rgb(75, 192, 192)",
         backgroundColor: "rgba(75, 192, 192, 0.5)",
       },
@@ -28,13 +29,13 @@ function RealTimeChart<T extends { time: string }>({
   });
 
   useEffect(() => {
+    const filteredData = data.filter(item => item.launch_relative_time >= 0);
     setChartData({
-      labels: data.map((item) => item["time"]),
+      labels: filteredData.map((item) => item["launch_relative_time"]),
       datasets: [
         {
           label: attributeName,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data: data.map((item) => item[attributeKey] as any), // 更新時にも同様にアサーション
+          data: filteredData.map((item) => item[attributeKey] as number),
           borderColor: "rgb(75, 192, 192)",
           backgroundColor: "rgba(75, 192, 192, 0.5)",
         },
@@ -43,18 +44,15 @@ function RealTimeChart<T extends { time: string }>({
   }, [data, attributeKey, attributeName]);
 
   const options = {
+    animation: {
+      duration: 0, // アニメーションの持続時間を0に設定して無効化
+    },
     scales: {
       x: {
-        type: "time" as const,
-        time: {
-          unit: "second" as const,
-          displayFormats: {
-            second: "MMM dd, yyyy HH:mm:ss",
-          },
-        },
+        type: "linear" as const,
         title: {
           display: true,
-          text: "Time",
+          text: "X - Time (seconds)",
         },
       },
       y: {
@@ -68,7 +66,7 @@ function RealTimeChart<T extends { time: string }>({
   };
 
   return (
-    <div className="h-full w-full">
+    <div className="w-full h-full">
       <Line options={options} data={chartData} />
     </div>
   );

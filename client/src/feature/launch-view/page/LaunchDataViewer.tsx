@@ -15,7 +15,7 @@ import { RocketStatusType } from "../../../types/rocketStatusType";
 
 interface TelemetryData {
   time?: string;
-  launch_relative_time?: string;
+  launch_relative_time?: number;
   flight_records?: FlightRecord[];
   event_records?: EventRecord[];
   rocket_status?: RocketStatusType;
@@ -104,13 +104,13 @@ export const LaunchDataViewer = React.memo(() => {
               attributeName="Altitude (m)"
             />
           </div>
-          <div className="w-[14%] h-full border-l border-gray-500">
+          <div className="w-[15%] h-full border-l border-gray-500">
             <VesselTelemetryViewer telemetryData={vesselTm} />
           </div>
-          <div className="w-[14%] h-full border-l border-r border-gray-500">
+          <div className="w-[15%] h-full border-l border-r border-gray-500">
             <WeatherInfo />
           </div>
-          <div className="w-[36%] h-full  flex justify-center">
+          <div className="w-[34%] h-full flex justify-center">
             <LivePlayer />
           </div>
         </div>
