@@ -1,14 +1,15 @@
-import { Route, Routes } from 'react-router-dom'
-import { LaunchDataViewer } from '../feature/launch-view/page/LaunchDataViewer'
-import { OrbitView } from '../page/OrbitView'
-import { RocketDetails } from '../page/RocketDetails'
+import { Route, Routes } from "react-router-dom";
+import { LaunchOperationPage } from "../page/LaunchOperationPage";
 
-export const AppRoutes = () => {
+/**
+ * アプリケーションのルートを定義するAppRoutesコンポーネント。
+ *
+ * @returns {JSX.Element} 定義されたルートを持つRoutesコンポーネント。
+ */
+export const AppRoutes: React.FC = (): JSX.Element => {
   return (
     <Routes>
-      <Route path="/" element={<LaunchDataViewer />}></Route>
-      <Route path="/orbital-view" element={<OrbitView />}></Route>
-      <Route path="/rocket-details" element={<RocketDetails />}></Route>
+      <Route path="/" element={<LaunchOperationPage />}></Route>
     </Routes>
-  )
-}
+  );
+};

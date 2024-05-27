@@ -15,7 +15,8 @@ export interface SolarPanelStatus {
 export interface ReactionWheelStatus {
   status: number;
   active: boolean;
-  available_torque: [number, number, number]; // Tuple for pitch, yaw, roll
+  // Tuple for pitch, yaw, roll
+  available_torque: [number, number, number]; 
   max_torque: [number, number, number];
 }
 
@@ -41,7 +42,6 @@ export interface EngineStatus {
   burn_time: number;
   temperature: number;
   max_temperature: number;
-  // throttle: number;
 }
 
 interface ResourceStatus {

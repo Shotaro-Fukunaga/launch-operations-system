@@ -1,15 +1,12 @@
-// import { WebSocketProvider } from './context/WebSocketContext'
-import { AppRoutes } from './routes/AppRoutes'
-import 'chartjs-adapter-date-fns';
+import { AppRoutes } from "./routes/AppRoutes";
+import "chartjs-adapter-date-fns";
 
 function App() {
   return (
     <>
-      {/* <WebSocketProvider> */}
-        <AppRoutes />
-      {/* </WebSocketProvider> */}
+      <AppRoutes />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
