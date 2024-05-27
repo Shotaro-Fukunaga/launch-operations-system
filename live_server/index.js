@@ -35,9 +35,9 @@ const config = {
           '-bufsize', '4000k'
         ],
         acParams: [
-          '-b:a', '128k',         // オーディオビットレート
-          '-ac', '2',             // オーディオのチャンネル数
-          '-ar', '48000'          // オーディオのサンプルレート（Hz）
+          '-b:a', '128k',
+          '-ac', '2', 
+          '-ar', '48000'
         ],
         hlsFlags: '[hls_time=0.05:hls_list_size=3:hls_flags=delete_segments+append_list]'
       }
