@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { VesselTelemetryType } from "../../../types/vesselTelemetryType";
+import { VesselTelemetryType } from "../types/vesselTelemetryType";
 
 interface VesselTelemetryViewerProps {
   telemetryData?: VesselTelemetryType;

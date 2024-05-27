@@ -1,9 +1,8 @@
 import { FC, useState } from "react";
-import { OrbitInfoType } from "../../../../types/vesselTelemetryType";
+import { OrbitInfoType } from "../../types/vesselTelemetryType";
 import LaunchHeader from "./LaunchHeader";
 import LaunchTimer from "./LaunchTimer";
 import OrbitInfo from "./OrbitInfo";
-import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import LaunchCommandModal, { CommandType } from "./LaunchCommandModal";
 import RocketIcon from "@mui/icons-material/Rocket";
 
@@ -13,12 +12,6 @@ type Props = {
   sendCommand: (command: object) => void;
 };
 
-// 種子島宇宙センターの位置情報
-const tanegashimaLocation = {
-  name: "種子島宇宙センター",
-  latitude: 31.2510,
-  longitude: 130.9180,
-};
 
 const LaunchScreen: FC<Props> = ({
   orbitInfo,

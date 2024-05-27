@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from "react";
-import { EventRecord } from "../../types/flightRecordType";
+import { EventRecord } from "../types/flightRecordType";
 
 interface TerminalLogProps {
-  logs?: EventRecord[]; // logs は undefined を許容する
+  logs?: EventRecord[];
 }
 
 const TerminalLog: React.FC<TerminalLogProps> = ({ logs }) => {
@@ -13,12 +13,6 @@ const TerminalLog: React.FC<TerminalLogProps> = ({ logs }) => {
       endOfLogsRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [logs]);
-
-  const formatTime = (timeString: string) => {
-    const [date, time] = timeString.split('T');
-    const [hours, minutes, seconds] = time.split('.')[0].split(':');
-    return `${date} ${hours}:${minutes}:${seconds}`;
-  };
 
   const formatRelativeTime = (relativeTime: number | undefined) => {
     if (relativeTime === undefined) return "X - 00:00:00";

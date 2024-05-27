@@ -1,6 +1,5 @@
-import React, { useState, FC } from "react";
+import { useState, FC } from "react";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
-import IconButton from "@mui/material/IconButton";
 import CloseIcon from "@mui/icons-material/Close";
 type Props = {
   isOpen: boolean;
@@ -60,9 +59,9 @@ const LaunchCommandModal: FC<Props> = ({ isOpen, onClose, onSubmit }) => {
           <CloseIcon />
         </button>
         <h2 className="mb-4 text-[2rem] text-center font-bold">
-        Launch Sequence Settings
+          Launch Sequence Settings
         </h2>
-        
+
         <div className="flex justify-center w-full p-5 gap-[2rem]">
           <div className="text-center">
             <h2 className="font-bold">機体情報</h2>
@@ -81,10 +80,8 @@ const LaunchCommandModal: FC<Props> = ({ isOpen, onClose, onSubmit }) => {
             <p>緯度 : 31.2°</p>
             <p>経度 : 130.9°</p>
           </div>
-
-        
         </div>
-        
+
         <div className="mb-4">
           <label className="block ">Launch Date:</label>
           <input

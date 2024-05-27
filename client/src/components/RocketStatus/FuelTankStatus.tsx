@@ -1,6 +1,6 @@
 import React from "react";
 import LinearProgress from "@mui/material/LinearProgress";
-import { TankStatus } from "../../../../types/rocketStatusType";
+import { TankStatus } from "../../types/rocketStatusType";
 import StatusLabel from "./StatusLabel";
 
 type Props = {

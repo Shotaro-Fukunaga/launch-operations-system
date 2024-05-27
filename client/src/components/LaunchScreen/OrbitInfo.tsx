@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { OrbitInfoType } from "../../../../types/vesselTelemetryType";
+import { OrbitInfoType } from "../../types/vesselTelemetryType";
 
 type Props = {
   orbitInfo?: OrbitInfoType;

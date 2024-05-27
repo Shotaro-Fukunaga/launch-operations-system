@@ -2,7 +2,7 @@ import React from "react";
 import {
   SatelliteBusStatusType,
   SolarPanelStatus,
-} from "../../../../types/rocketStatusType";
+} from "../../types/rocketStatusType";
 import SatelliteAltIcon from "@mui/icons-material/SatelliteAlt";
 import StatusLabel from "./StatusLabel";
 import SolarPowerIcon from "@mui/icons-material/SolarPower";

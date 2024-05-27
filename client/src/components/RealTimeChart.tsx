@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 import "chart.js/auto";
 import "chartjs-adapter-date-fns";
 
-
-
-interface RealTimeChartProps<T extends { launch_relative_time: number }> {
+interface Props<T extends { launch_relative_time: number }> {
   data: T[];
-  attributeKey: keyof T; // T型の任意のキー
+  attributeKey: keyof T; 
   attributeName: string; // チャートの軸ラベルに表示される属性名
 }
 
@@ -15,7 +13,7 @@ function RealTimeChart<T extends { launch_relative_time: number }>({
   data,
   attributeKey,
   attributeName,
-}: RealTimeChartProps<T>): JSX.Element {
+}: Props<T>): JSX.Element {
   const [chartData, setChartData] = useState({
     labels: data.map((item) => item["launch_relative_time"]),
     datasets: [
@@ -29,7 +27,7 @@ function RealTimeChart<T extends { launch_relative_time: number }>({
   });
 
   useEffect(() => {
-    const filteredData = data.filter(item => item.launch_relative_time >= 0);
+    const filteredData = data.filter((item) => item.launch_relative_time >= 0);
     setChartData({
       labels: filteredData.map((item) => item["launch_relative_time"]),
       datasets: [

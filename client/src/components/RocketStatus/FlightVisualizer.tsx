@@ -1,21 +1,15 @@
-import RocketComponent from "../../../../components/Svg/Rocket";
-
-// import { useContext } from "react";
+import RocketComponent from "./RocketSvg";
 import { RocketEngineStatus } from "./EngineStatus";
 import { FuelTankStatus } from "./FuelTankStatus";
-// import { WebSocketContext } from "../../../../context/WebSocketContext";
 import { FairingStatus } from "./FairingStatus";
 import SatelliteBusStatus from "./SatelliteBusStatus";
-import { RocketStatusType } from "../../../../types/rocketStatusType";
+import { RocketStatusType } from "../../types/rocketStatusType";
 
 type Props = {
   rocketStatus?: RocketStatusType;
 };
 
-
-export const FlightVisualizer:React.FC<Props> = ({rocketStatus}) => {
- 
-
+export const FlightVisualizer: React.FC<Props> = ({ rocketStatus }) => {
   return (
     <>
       <div className="flex w-full h-full">
@@ -46,9 +40,9 @@ export const FlightVisualizer:React.FC<Props> = ({rocketStatus}) => {
 
         <div className="h-full w-[30%] flex-col content-end border-l border-r border-gray-500">
           <RocketComponent
-              fairingStatus={rocketStatus?.fairing_1?.status ?? 0}
-              secondStageStatus={rocketStatus?.second_engine?.status ?? 0}
-              firstStageStatus={rocketStatus?.main_engine?.status ?? 0}
+            fairingStatus={rocketStatus?.fairing_1?.status ?? 0}
+            secondStageStatus={rocketStatus?.second_engine?.status ?? 0}
+            firstStageStatus={rocketStatus?.main_engine?.status ?? 0}
           />
         </div>
 

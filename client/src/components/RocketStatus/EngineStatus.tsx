@@ -1,4 +1,4 @@
-import { EngineStatus } from "../../../../types/rocketStatusType";
+import { EngineStatus } from "../../types/rocketStatusType";
 import StatusLabel from "./StatusLabel";
 
 type Props = {
