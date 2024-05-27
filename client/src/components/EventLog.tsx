@@ -1,11 +1,11 @@
 import React, { useEffect, useRef } from "react";
 import { EventRecord } from "../types/flightRecordType";
 
-interface TerminalLogProps {
+type Props = {
   logs?: EventRecord[];
 }
 
-const TerminalLog: React.FC<TerminalLogProps> = ({ logs }) => {
+const TerminalLog: React.FC<Props> = ({ logs }) => {
   const endOfLogsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

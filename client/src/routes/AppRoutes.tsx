@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router-dom";
-import { LaunchDataViewer } from "../page/LaunchDataViewer";
+import { LaunchOperationPage } from "../page/LaunchOperationPage";
 
 /**
  * アプリケーションのルートを定義するAppRoutesコンポーネント。
@@ -9,7 +9,7 @@ import { LaunchDataViewer } from "../page/LaunchDataViewer";
 export const AppRoutes: React.FC = (): JSX.Element => {
   return (
     <Routes>
-      <Route path="/" element={<LaunchDataViewer />}></Route>
+      <Route path="/" element={<LaunchOperationPage />}></Route>
     </Routes>
   );
 };

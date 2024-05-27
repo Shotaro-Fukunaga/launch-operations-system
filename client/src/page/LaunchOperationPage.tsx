@@ -22,7 +22,7 @@ interface TelemetryData {
   vessel_telemetry?: VesselTelemetryType;
 }
 
-export const LaunchDataViewer = React.memo(() => {
+export const LaunchOperationPage = React.memo(() => {
   const [webSocket, setWebSocket] = useState<WebSocket | null>(null);
   const [telemetryData, setTelemetryData] = useState<TelemetryData>({});
 
@@ -69,7 +69,6 @@ export const LaunchDataViewer = React.memo(() => {
   return (
     <BasicLayout>
       <div className="flex flex-wrap w-full h-full bg-[#242424] text-white">
-        {/* ################################ 上半分 ################################ */}
         <div className="flex h-[60%] w-full">
           <div className="w-[20%] h-full flex-col">
             <div className="h-[50%] w-full text-white">
@@ -79,22 +78,17 @@ export const LaunchDataViewer = React.memo(() => {
                 sendCommand={sendCommand}
               />
             </div>
-
             <div className="w-full h-[50%] bg-[#242424]">
               <TerminalLog logs={eventRecord ?? []} />
             </div>
           </div>
-
           <div className="border-l border-r border-gray-500 w-[56%] h-full">
             <CesiumComponent flightRecords={flightRecord ?? []} />
           </div>
-
           <div className="w-[24%] h-full bg-[#242424] text-white">
             <FlightVisualizer rocketStatus={rocketStatus} />
           </div>
         </div>
-
-        {/* ################################ 下半分 ################################ */}
 
         <div className="flex h-[40%] w-full border-t border-gray-500">
           <div className="w-[36%] h-full ">

@@ -1,12 +1,12 @@
 import React from "react";
 
-interface RocketComponentProps {
+type Props ={
   fairingStatus: number;
   firstStageStatus: number;
   secondStageStatus: number;
 }
 
-const RocketComponent: React.FC<RocketComponentProps> = ({
+const RocketComponent: React.FC<Props> = ({
   fairingStatus,
   firstStageStatus,
   secondStageStatus,

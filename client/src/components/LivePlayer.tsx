@@ -3,12 +3,11 @@ import ReactPlayer from "react-player";
 
 export const LivePlayer = () => {
   const playerRef = useRef(null);
-  const liveServerUrl = import.meta.env.LIVE_SERVER_URL;
   return (
     <div className="player-wrapper">
       <ReactPlayer
         ref={playerRef}
-        url={liveServerUrl}
+        url="http://localhost:8010/live/ksp/index.m3u8"
         width="100%"
         height="100%"
         controls={true}

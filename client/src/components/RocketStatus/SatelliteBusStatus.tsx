@@ -8,7 +8,7 @@ import StatusLabel from "./StatusLabel";
 import SolarPowerIcon from "@mui/icons-material/SolarPower";
 import SignalCellularAltIcon from "@mui/icons-material/SignalCellularAlt";
 
-interface Props {
+type Props = {
   title: string;
   satelliteBusStatus?: SatelliteBusStatusType;
   solarPanelStatus1?: SolarPanelStatus;

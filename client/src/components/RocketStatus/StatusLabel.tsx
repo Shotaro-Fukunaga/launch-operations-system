@@ -1,11 +1,11 @@
 import React from "react";
 
-type StatusLabelProps = {
+type Props = {
   status: number | undefined;
   customLabels?: { [key: number]: string };
 };
 
-const StatusLabel: React.FC<StatusLabelProps> = ({ status, customLabels }) => {
+const StatusLabel: React.FC<Props> = ({ status, customLabels }) => {
   const defaultLabels: { [key: number]: string } = {
     0: "WAIT",
     1: "GO",
