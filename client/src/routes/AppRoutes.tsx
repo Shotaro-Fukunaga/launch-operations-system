@@ -1,5 +1,5 @@
 import { Route, Routes } from "react-router-dom";
-import { LaunchDataViewer } from "../feature/launch-view/page/LaunchDataViewer";
+import { LaunchDataViewer } from "../page/LaunchDataViewer";
 
 /**
  * アプリケーションのルートを定義するAppRoutesコンポーネント。

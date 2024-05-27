@@ -1,17 +1,17 @@
-import { BasicLayout } from "../../../components/Layout/BasicLayout";
+import { BasicLayout } from "../components/Layout/BasicLayout";
 import { FlightVisualizer } from "../components/FlightVisual/FlightVisualizer";
-import { LivePlayer } from "../../../components/Live/LivePlayer";
-import CesiumComponent from "../../../components/Cesium/Cesium";
+import { LivePlayer } from "../components/Live/LivePlayer";
+import CesiumComponent from "../components/Cesium/Cesium";
 import { useEffect, useState } from "react";
 import React from "react";
-import TerminalLog from "../../../components/Terminal/TerminalLog";
-import WeatherInfo from "../../../components/WeatherInfo";
+import TerminalLog from "../components/Terminal/TerminalLog";
+import WeatherInfo from "../components/WeatherInfo";
 import VesselTelemetryViewer from "../components/VesselTelemetryViewer";
-import RealTimeChart from "../../../components/Chart/RealTimeChart";
+import RealTimeChart from "../components/Chart/RealTimeChart";
 import LaunchScreen from "../components/Launch/LaunchScreen";
-import { EventRecord, FlightRecord } from "../../../types/flightRecordType";
-import { VesselTelemetryType } from "../../../types/vesselTelemetryType";
-import { RocketStatusType } from "../../../types/rocketStatusType";
+import { EventRecord, FlightRecord } from "../types/flightRecordType";
+import { VesselTelemetryType } from "../types/vesselTelemetryType";
+import { RocketStatusType } from "../types/rocketStatusType";
 
 interface TelemetryData {
   time?: string;
